@@ -8,9 +8,14 @@ __lua__
 _version=1
 cartdata("sestrenexsis_nandgate_1")
 
+_colors={1,13,2,14,7}
+--_colors={0,4,3,11,7}
 
 function _init()
 	-- init
+	for i=1,5 do
+		pal(i-1,_colors[i],1)
+	end
 end
 
 function _update()
@@ -19,7 +24,16 @@ end
 
 function _draw()
 	-- draw
-	cls(2)
+	cls(0)
+	for i=0,4 do
+		local lf=1
+		local tp=6*i+1
+		print(tostr(i),lf+1,tp+1,1)
+		print(tostr(i),lf,tp,4)
+		rect(lf+5,tp+1,lf+9,tp+5,1)
+		rect(lf+4,tp,lf+8,tp+4,4)
+		rectfill(lf+5,tp+1,lf+7,tp+3,i)
+	end
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
