@@ -22,16 +22,40 @@ function _init()
 	_cols=8 --36
 	_rw=0
 	_cl=0
-	_grdlt=15
 	_grdtp=15
+	_grdlt=15
+	_wires={}
 end
 
 function _update()
-	-- update
-	if (btnp(⬅️)) _cl=max(0,_cl-1)
-	if (btnp(➡️)) _cl=min(_cols-1,_cl+1)
-	if (btnp(⬆️)) _rw=max(0,_rw-1)
-	if (btnp(⬇️)) _rw=min(_rows-1,_rw+1)
+	-- input
+	if btnp(⬅️) then
+		_cl=max(0,_cl-1)
+	elseif btnp(➡️) then
+		_cl=min(_cols-1,_cl+1)
+	end
+	if btnp(⬆️) then
+		_rw=max(0,_rw-1)
+	elseif btnp(⬇️) then
+		_rw=min(_rows-1,_rw+1)
+	end
+	if btnp(🅾️) then
+		-- add wire if cell is free
+		local wire={_rw,_cl}
+		local free=true
+		for w in all(_wires) do
+			if (
+				w[1]==wire[1] and
+				w[2]==wire[2]
+			) then
+				free=false
+				break
+			end
+		end
+		if free then
+			add(_wires,wire)
+		end
+	end
 end
 
 function _draw()
@@ -54,6 +78,14 @@ function _draw()
 			pset(x,y,1)
 		end
 	end
+	-- draw wires
+	for w in all(_wires) do
+		local rw=w[1]
+		local cl=w[2]
+		local x=cl*3+_grdlt
+		local y=rw*3+_grdtp
+		pset(x,y,3)
+	end
 	-- draw cursor
 	local lt=_cl*3+_grdlt
 	local tp=_rw*3+_grdtp
@@ -62,6 +94,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
+	print(#_wires,120,120)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
