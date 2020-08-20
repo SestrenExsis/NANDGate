@@ -8,23 +8,35 @@ __lua__
 _version=1
 cartdata("sestrenexsis_nandgate_1")
 
-_colors={1,13,2,14,7}
---_colors={0,4,3,11,7}
+_colors={[0]=1,13,2,14,7}
+--[[
+_colors={[0]=0,4,3,11,7}
+--]]
 
 function _init()
 	-- init
-	for i=1,5 do
-		pal(i-1,_colors[i],1)
+	for i=0,4 do
+		pal(i,_colors[i],1)
 	end
+	_rows=8 --36
+	_cols=8 --36
+	_rw=0
+	_cl=0
+	_grdlt=15
+	_grdtp=15
 end
 
 function _update()
 	-- update
+	if (btnp(⬅️)) _cl=max(0,_cl-1)
+	if (btnp(➡️)) _cl=min(_cols-1,_cl+1)
+	if (btnp(⬆️)) _rw=max(0,_rw-1)
+	if (btnp(⬇️)) _rw=min(_rows-1,_rw+1)
 end
 
 function _draw()
-	-- draw
 	cls(0)
+	-- draw palette
 	for i=0,4 do
 		local lf=1
 		local tp=6*i+1
@@ -33,6 +45,22 @@ function _draw()
 		rect(lf+5,tp+1,lf+9,tp+5,1)
 		rect(lf+4,tp,lf+8,tp+4,4)
 		rectfill(lf+5,tp+1,lf+7,tp+3,i)
+	end
+	-- draw grid
+	for rw=0,_rows-1 do
+		for cl=0,_cols-1 do
+			local x=cl*3+_grdlt
+			local y=rw*3+_grdtp
+			pset(x,y,1)
+		end
+	end
+	-- draw cursor
+	local lt=_cl*3+_grdlt
+	local tp=_rw*3+_grdtp
+	if t()%0.5<0.25 then
+		rect(lt-1,tp-1,lt+1,tp+1,4)
+	else
+		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
 end
 __gfx__
