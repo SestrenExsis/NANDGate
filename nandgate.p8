@@ -9,14 +9,28 @@ _version=1
 cartdata("sestrenexsis_nandgate_1")
 
 function _init()
-	-- color palette
+	-- common vars
 	---[[
-	_pal={[0]=1,13,2,14,7}
-	--]]
-	--[[
-	_pal={[0]=0,5,3,11,7}
-	--]]
-	for i=0,4 do
+	_pal={[0]=
+		 1, -- 1 or  0
+		13, --13 or  5
+		 2, -- 2 or  3
+		14, --14 or 11
+		 7  -- 7 or  7
+		}
+	_dirs={[0]=
+		{ 0, 0}, --no direction
+		{-1, 0}, --north
+		{-1, 1}, --northeast
+		{ 0, 1}, --east
+		{ 1, 1}, --southeast
+		{ 1, 0}, --south
+		{ 1,-1}, --southwest
+		{ 0,-1}, --west
+		{-1,-1}, --northwest
+		}
+	-- alter color palette
+	for i=0,#_pal do
 		pal(i,_pal[i],1)
 	end
 	-- grid
@@ -47,7 +61,7 @@ function _update()
 	end
 	if btnp(🅾️) then
 		-- add wire if cell is free
-		local wire={_rw,_cl}
+		local wire=0
 		local idx=_rw*_cols+_cl
 		if _grid[idx]==0 then
 			add(_wires,wire)
@@ -80,7 +94,12 @@ function _draw()
 			if _grid[idx]==0 then
 				pset(x,y,1)
 			else
-				pset(x,y,3)
+				local w=_wires[_grid[idx]]
+				if w==0 then
+					pset(x,y,2)
+				else
+					pset(x,y,3)
+				end
 			end
 		end
 	end
