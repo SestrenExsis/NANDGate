@@ -8,18 +8,20 @@ __lua__
 _version=1
 cartdata("sestrenexsis_nandgate_1")
 
-_colors={[0]=1,13,2,14,7}
---[[
-_colors={[0]=0,5,3,11,7}
---]]
-
 function _init()
-	-- init
+	-- color palette
+	---[[
+	_pal={[0]=1,13,2,14,7}
+	--]]
+	--[[
+	_pal={[0]=0,5,3,11,7}
+	--]]
 	for i=0,4 do
-		pal(i,_colors[i],1)
+		pal(i,_pal[i],1)
 	end
-	_rows=8 --36
-	_cols=8 --36
+	-- grid
+	_rows=16 --36
+	_cols=16 --36
 	_grid={[0]=0}
 	for i=1,_rows*_cols-1 do
 		add(_grid,0)
@@ -63,8 +65,11 @@ function _draw()
 		print(tostr(i),lf+1,tp+1,1)
 		print(tostr(i),lf,tp,4)
 		rect(lf+5,tp+1,lf+9,tp+5,1)
-		rect(lf+4,tp,lf+8,tp+4,4)
-		rectfill(lf+5,tp+1,lf+7,tp+3,i)
+		rect(lf+4, tp,lf+8,tp+4,4)
+		rectfill(
+			lf+5,tp+1,
+			lf+7,tp+3,
+			i)
 	end
 	-- draw grid and wires
 	for rw=0,_rows-1 do
