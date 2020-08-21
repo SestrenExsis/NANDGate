@@ -10,7 +10,7 @@ cartdata("sestrenexsis_nandgate_1")
 
 _colors={[0]=1,13,2,14,7}
 --[[
-_colors={[0]=0,4,3,11,7}
+_colors={[0]=0,5,3,11,7}
 --]]
 
 function _init()
@@ -20,10 +20,14 @@ function _init()
 	end
 	_rows=8 --36
 	_cols=8 --36
-	_rw=0
-	_cl=0
+	_grid={[0]=0}
+	for i=1,_rows*_cols-1 do
+		add(_grid,0)
+	end
 	_grdtp=15
 	_grdlt=15
+	_rw=0
+	_cl=0
 	_wires={}
 end
 
@@ -42,18 +46,10 @@ function _update()
 	if btnp(🅾️) then
 		-- add wire if cell is free
 		local wire={_rw,_cl}
-		local free=true
-		for w in all(_wires) do
-			if (
-				w[1]==wire[1] and
-				w[2]==wire[2]
-			) then
-				free=false
-				break
-			end
-		end
-		if free then
+		local idx=_rw*_cols+_cl
+		if _grid[idx]==0 then
 			add(_wires,wire)
+			_grid[idx]=#_wires
 		end
 	end
 end
@@ -70,21 +66,18 @@ function _draw()
 		rect(lf+4,tp,lf+8,tp+4,4)
 		rectfill(lf+5,tp+1,lf+7,tp+3,i)
 	end
-	-- draw grid
+	-- draw grid and wires
 	for rw=0,_rows-1 do
 		for cl=0,_cols-1 do
 			local x=cl*3+_grdlt
 			local y=rw*3+_grdtp
-			pset(x,y,1)
+			local idx=rw*_cols+cl
+			if _grid[idx]==0 then
+				pset(x,y,1)
+			else
+				pset(x,y,3)
+			end
 		end
-	end
-	-- draw wires
-	for w in all(_wires) do
-		local rw=w[1]
-		local cl=w[2]
-		local x=cl*3+_grdlt
-		local y=rw*3+_grdtp
-		pset(x,y,3)
 	end
 	-- draw cursor
 	local lt=_cl*3+_grdlt
@@ -94,7 +87,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
-	print(#_wires,120,120)
+	print(#_wires,120,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
