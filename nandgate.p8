@@ -18,17 +18,6 @@ function _init()
 		14, --14 or 11
 		 7  -- 7 or  7
 		}
-	_dirs={[0]=
-		{ 0, 0}, --no direction
-		{-1, 0}, --north
-		{-1, 1}, --northeast
-		{ 0, 1}, --east
-		{ 1, 1}, --southeast
-		{ 1, 0}, --south
-		{ 1,-1}, --southwest
-		{ 0,-1}, --west
-		{-1,-1}, --northwest
-		}
 	-- alter color palette
 	for i=0,#_pal do
 		pal(i,_pal[i],1)
@@ -45,10 +34,23 @@ function _init()
 	_rw=0
 	_cl=0
 	_wires={}
+	_dirs={[0]= -- {row,col,index}
+		{ 0, 0,       0}, -- none
+		{-1, 0,-_cols  }, -- north
+		{-1, 1,-_cols+1}, -- northeast
+		{ 0, 1,       1}, -- east
+		{ 1, 1, _cols+1}, -- southeast
+		{ 1, 0, _cols  }, -- south
+		{ 1,-1, _cols-1}, -- southwest
+		{ 0,-1,      -1}, -- west
+		{-1,-1,-_cols-1}, -- northwest
+		}
 end
 
 function _update()
 	-- input
+	local lcl=_cl
+	local lrw=_rw
 	if btnp(⬅️) then
 		_cl=max(0,_cl-1)
 	elseif btnp(➡️) then
@@ -59,11 +61,19 @@ function _update()
 	elseif btnp(⬇️) then
 		_rw=min(_rows-1,_rw+1)
 	end
-	if btnp(🅾️) then
+	if btn(🅾️) then
 		-- add wire if cell is free
-		local wire=0
 		local idx=_rw*_cols+_cl
 		if _grid[idx]==0 then
+			local wire=0
+			local drw=mid(-1,_rw-lrw,1)
+			local dcl=mid(-1,_cl-lcl,1)
+			for k,v in pairs(_dirs) do
+				if v[1]==drw and v[2]==dcl then
+					wire=k
+					break
+				end
+			end
 			add(_wires,wire)
 			_grid[idx]=#_wires
 		end
@@ -95,11 +105,12 @@ function _draw()
 				pset(x,y,1)
 			else
 				local w=_wires[_grid[idx]]
-				if w==0 then
-					pset(x,y,2)
-				else
-					pset(x,y,3)
-				end
+				local dr=_dirs[w]
+				local dx=dr[2]
+				local dy=dr[1]
+				pset(x,y,3)
+				pset(x+dx,y+dy,3)
+				pset(x+2*dx,y+2*dy,3)
 			end
 		end
 	end
