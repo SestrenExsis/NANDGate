@@ -33,7 +33,7 @@ function _init()
 	_grdlt=15
 	_rw=0
 	_cl=0
-	_wires={}
+	_objs={}
 	_dirs={[0]= -- {row,col,index}
 		{ 0, 0,       0}, -- none
 		{-1, 0,-_cols  }, -- north
@@ -61,12 +61,12 @@ function _update()
 	elseif btnp(⬇️) then
 		_rw=min(_rows-1,_rw+1)
 	end
-	if btn(🅾️) then
+	if btn(❎) then
 		-- add wire if cell is free
 		local src=lrw*_cols+lcl
 		local trg=_rw*_cols+_cl
 		if _grid[trg]==0 then
-			local wire=0
+			local obj=0
 			local drw=mid(-1,_rw-lrw,1)
 			local dcl=mid(-1,_cl-lcl,1)
 			for k,v in pairs(_dirs) do
@@ -74,12 +74,12 @@ function _update()
 					v[1]==drw and
 					v[2]==dcl
 				) then
-					wire=k
+					obj=k
 					break
 				end
 			end
-			add(_wires,wire)
-			_grid[src]=#_wires
+			add(_objs,obj)
+			_grid[src]=#_objs
 		end
 	end
 end
@@ -108,7 +108,7 @@ function _draw()
 			if _grid[idx]==0 then
 				pset(x,y,1)
 			else
-				local w=_wires[_grid[idx]]
+				local w=_objs[_grid[idx]]
 				local dr=_dirs[w]
 				local dx=dr[2]
 				local dy=dr[1]
@@ -126,7 +126,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
-	print(#_wires,120,120,1)
+	print(#_objs,120,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
