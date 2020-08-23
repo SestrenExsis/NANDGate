@@ -63,19 +63,23 @@ function _update()
 	end
 	if btn(🅾️) then
 		-- add wire if cell is free
-		local idx=_rw*_cols+_cl
-		if _grid[idx]==0 then
+		local src=lrw*_cols+lcl
+		local trg=_rw*_cols+_cl
+		if _grid[trg]==0 then
 			local wire=0
 			local drw=mid(-1,_rw-lrw,1)
 			local dcl=mid(-1,_cl-lcl,1)
 			for k,v in pairs(_dirs) do
-				if v[1]==drw and v[2]==dcl then
+				if (
+					v[1]==drw and
+					v[2]==dcl
+				) then
 					wire=k
 					break
 				end
 			end
 			add(_wires,wire)
-			_grid[idx]=#_wires
+			_grid[src]=#_wires
 		end
 	end
 end
