@@ -11,13 +11,11 @@ cartdata("sestrenexsis_nandgate_1")
 function _init()
 	-- common vars
 	---[[
-	_pal={[0]=
-		 1, -- 1 or  0
-		13, --13 or  5
-		 2, -- 2 or  3
-		14, --14 or 11
-		 7  -- 7 or  7
+	_pals={
+		{[0]= 1,13, 2,14, 7},
+		{[0]= 0, 5, 3,11, 7}
 		}
+		_pal=_pals[1]
 	-- alter color palette
 	for i=0,#_pal do
 		pal(i,_pal[i],1)
@@ -81,6 +79,12 @@ function _update()
 			add(_objs,obj)
 			_grid[src]=#_objs
 		end
+	elseif btn(🅾️) then
+		-- remove wire if exists
+		local trg=_rw*_cols+_cl
+		if _grid[trg]!=0 then
+			_grid[trg]=0
+		end
 	end
 end
 
@@ -126,7 +130,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
-	print(#_objs,120,120,1)
+	print(#_objs,116,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
