@@ -27,11 +27,16 @@ function _init()
 	for i=1,_rows*_cols do
 		add(_grid,0)
 	end
+	_pow=16
+	local i=_cols*flr(_rows*0.5)+1
+	_grid[i]=_pow
+	add(_objs,i)
 	assert(#_grid==_rows*_cols)
 	_grdtp=15
 	_grdlt=15
 	_rw=1
 	_cl=1
+	_objs={}
 	_dirs={
 		-- {row,col,index}
 		{ 0, 0,       0}, -- none
@@ -73,6 +78,7 @@ function _update()
 					v[2]==dcl
 				) then
 					_grid[lidx]=k
+					add(_objs,lidx)
 					break
 				end
 			end
@@ -80,6 +86,7 @@ function _update()
 	elseif btn(🅾️) then
 		-- remove wire if exists
 		_grid[cidx]=0
+		del(_objs,cidx)
 	end
 end
 
@@ -106,13 +113,16 @@ function _draw()
 			local idx=(rw-1)*_cols+cl
 			if _grid[idx]==0 then
 				pset(x,y,1)
+			elseif _grid[idx]==_pow then
+				rect(x-1,y-1,x+1,y+1,4)
+				line(x,y,x+2,y,3)
 			else
 				local dr=_dirs[_grid[idx]]
 				local dy=dr[1]
 				local dx=dr[2]
-				pset(x,y,3)
-				pset(x+dx,y+dy,3)
-				pset(x+2*dx,y+2*dy,3)
+				pset(x,y,2)
+				pset(x+dx,y+dy,2)
+				pset(x+2*dx,y+2*dy,2)
 			end
 		end
 	end
@@ -124,6 +134,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
+	print(#_objs,116,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
