@@ -23,16 +23,17 @@ function _init()
 	-- grid
 	_rows=16 --36
 	_cols=16 --36
-	_grid={[0]=0}
-	for i=1,_rows*_cols-1 do
+	_grid={}
+	for i=1,_rows*_cols do
 		add(_grid,0)
 	end
+	assert(#_grid==_rows*_cols)
 	_grdtp=15
 	_grdlt=15
-	_rw=0
-	_cl=0
-	_objs={}
-	_dirs={[0]= -- {row,col,index}
+	_rw=1
+	_cl=1
+	_dirs={
+		-- {row,col,index}
 		{ 0, 0,       0}, -- none
 		{-1, 0,-_cols  }, -- north
 		{-1, 1,-_cols+1}, -- northeast
@@ -50,21 +51,20 @@ function _update()
 	local lcl=_cl
 	local lrw=_rw
 	if btnp(⬅️) then
-		_cl=max(0,_cl-1)
+		_cl=max(1,_cl-1)
 	elseif btnp(➡️) then
-		_cl=min(_cols-1,_cl+1)
+		_cl=min(_cols,_cl+1)
 	end
 	if btnp(⬆️) then
-		_rw=max(0,_rw-1)
+		_rw=max(1,_rw-1)
 	elseif btnp(⬇️) then
-		_rw=min(_rows-1,_rw+1)
+		_rw=min(_rows,_rw+1)
 	end
+	local lidx=(lrw-1)*_cols+lcl
+	local cidx=(_rw-1)*_cols+_cl
 	if btn(❎) then
 		-- add wire if cell is free
-		local src=lrw*_cols+lcl
-		local trg=_rw*_cols+_cl
-		if _grid[trg]==0 then
-			local obj=0
+		if _grid[cidx]==0 then
 			local drw=mid(-1,_rw-lrw,1)
 			local dcl=mid(-1,_cl-lcl,1)
 			for k,v in pairs(_dirs) do
@@ -72,19 +72,14 @@ function _update()
 					v[1]==drw and
 					v[2]==dcl
 				) then
-					obj=k
+					_grid[lidx]=k
 					break
 				end
 			end
-			add(_objs,obj)
-			_grid[src]=#_objs
 		end
 	elseif btn(🅾️) then
 		-- remove wire if exists
-		local trg=_rw*_cols+_cl
-		if _grid[trg]!=0 then
-			_grid[trg]=0
-		end
+		_grid[cidx]=0
 	end
 end
 
@@ -104,18 +99,17 @@ function _draw()
 			i)
 	end
 	-- draw grid and wires
-	for rw=0,_rows-1 do
-		for cl=0,_cols-1 do
+	for rw=1,_rows do
+		for cl=1,_cols do
 			local x=cl*3+_grdlt
 			local y=rw*3+_grdtp
-			local idx=rw*_cols+cl
+			local idx=(rw-1)*_cols+cl
 			if _grid[idx]==0 then
 				pset(x,y,1)
 			else
-				local w=_objs[_grid[idx]]
-				local dr=_dirs[w]
-				local dx=dr[2]
+				local dr=_dirs[_grid[idx]]
 				local dy=dr[1]
+				local dx=dr[2]
 				pset(x,y,3)
 				pset(x+dx,y+dy,3)
 				pset(x+2*dx,y+2*dy,3)
@@ -130,7 +124,6 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
-	print(#_objs,116,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
