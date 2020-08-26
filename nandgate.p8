@@ -8,24 +8,32 @@ __lua__
 _version=1
 cartdata("sestrenexsis_nandgate_1")
 
-function newwire(o)
+function newdevice(
+	n, -- device name
+	o  -- output(s)
+	)
 	local res={
+		name=n,
 		out=o,
 		ltik=-1 -- last powered tick
 	}
 	return res
 end
 
+function newwire(o)
+	local res=newdevice("wire",o)
+	return res
+end
+
 function _init()
 	-- common vars
-	---[[
 	_tick=0
+	-- alter color palette
 	_pals={
 		{[0]= 1,13, 2,14, 7},
 		{[0]= 0, 5, 3,11, 7}
 		}
 		_pal=_pals[1]
-	-- alter color palette
 	for i=0,#_pal do
 		pal(i,_pal[i],1)
 	end
@@ -41,7 +49,7 @@ function _init()
 	_grdlt=15
 	_rw=1
 	_cl=1
-	_objs={}
+	_dvcs={}
 	_dirs={
 		-- {row,col,index}
 		{ 0, 0,       0}, -- none
@@ -57,13 +65,13 @@ function _init()
 	-- add a starting wire
 	_powidx=_cols*flr(_rows*0.5)+1
 	_grid[_powidx]=newwire(4)
-	add(_objs,_powidx)
+	add(_dvcs,_powidx)
 end
 
 function tick()
 	_tick=(_tick+1)%32768
-	if #_objs>0 then
-		local pows={_objs[1]}
+	if #_dvcs>0 then
+		local pows={_dvcs[1]}
 		while #pows>0 do
 			local idx=pows[1]
 			local wire=_grid[idx]
@@ -82,14 +90,6 @@ function tick()
 			wire.ltik=_tick
 		end
 	end
-	--[[
-	if _tick%2==1 then
-		for i in all(_objs) do
-			local wire=_grid[i]
-			wire.ltik=_tick
-		end
-	end
-	--]]
 end
 
 function _update()
@@ -119,7 +119,7 @@ function _update()
 					v[2]==dcl
 				) then
 					_grid[lidx]=newwire(k)
-					add(_objs,lidx)
+					add(_dvcs,lidx)
 					break
 				end
 			end
@@ -127,7 +127,7 @@ function _update()
 	elseif btn(🅾️) then
 		-- remove wire if exists
 		_grid[cidx]=0
-		del(_objs,cidx)
+		del(_dvcs,cidx)
 	end
 	if btnp(⬆️,1) then
 		tick()
@@ -180,7 +180,7 @@ function _draw()
 	else
 		rect(lt-1,tp-1,lt+1,tp+1,1)
 	end
-	print(#_objs,116,120,1)
+	print(#_dvcs,116,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
