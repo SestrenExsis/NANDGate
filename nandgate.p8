@@ -11,7 +11,7 @@ cartdata("sestrenexsis_nandgate_1")
 function newwire(o)
 	local res={
 		out=o,
-		tik=-1
+		ltik=-1 -- last powered tick
 	}
 	return res
 end
@@ -55,13 +55,44 @@ function _init()
 		{-1,-1,-_cols-1}, -- northwest
 		}
 	-- add a starting wire
-	local i=_cols*flr(_rows*0.5)+1
-	_grid[i]=newwire(4)
-	add(_objs,i)
+	_powidx=_cols*flr(_rows*0.5)+1
+	_grid[_powidx]=newwire(4)
+	add(_objs,_powidx)
+end
+
+function tick()
+	_tick=(_tick+1)%32768
+	if #_objs>0 then
+		local pows={_objs[1]}
+		while #pows>0 do
+			local idx=pows[1]
+			local wire=_grid[idx]
+			local ofs=_dirs[wire.out][3]
+			local n=idx+ofs
+			if (
+				n>=1 and
+				n<=#_grid and
+				_grid[n]!=0 and
+				_grid[n].ltik<_tick
+			) then
+				add(pows,n)
+			end
+			deli(pows,1)
+			-- update the wire
+			wire.ltik=_tick
+		end
+	end
+	--[[
+	if _tick%2==1 then
+		for i in all(_objs) do
+			local wire=_grid[i]
+			wire.ltik=_tick
+		end
+	end
+	--]]
 end
 
 function _update()
-	_tick=(_tick+1)%32768
 	-- input
 	local lcl=_cl
 	local lrw=_rw
@@ -98,12 +129,8 @@ function _update()
 		_grid[cidx]=0
 		del(_objs,cidx)
 	end
-	-- tick
-	if _tick%2==1 then
-		for i in all(_objs) do
-			local wire=_grid[i]
-			wire.tik=_tick
-		end
+	if btnp(⬆️,1) then
+		tick()
 	end
 end
 
@@ -133,7 +160,7 @@ function _draw()
 			else
 				local wire=_grid[idx]
 				local c=2
-				if wire.tik==_tick then
+				if wire.ltik==_tick then
 					c=3
 				end
 				local dr=_dirs[wire.out]
