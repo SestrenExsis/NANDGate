@@ -25,6 +25,12 @@ function newwire(o)
 	return res
 end
 
+function newtrip(o)
+	local res=newdevice("trip",o)
+	res.on=false
+	return res
+end
+
 function _init()
 	-- common vars
 	_tick=0
@@ -62,9 +68,9 @@ function _init()
 		{ 0,-1,      -1}, -- west
 		{-1,-1,-_cols-1}, -- northwest
 		}
-	-- add a starting wire
+	-- add a starting trip
 	_powidx=_cols*flr(_rows*0.5)+1
-	_grid[_powidx]=newwire(4)
+	_grid[_powidx]=newtrip(4)
 	add(_dvcs,_powidx)
 end
 
@@ -74,8 +80,8 @@ function tick()
 		local pows={_dvcs[1]}
 		while #pows>0 do
 			local idx=pows[1]
-			local wire=_grid[idx]
-			local ofs=_dirs[wire.out][3]
+			local dvc=_grid[idx]
+			local ofs=_dirs[dvc.out][3]
 			local n=idx+ofs
 			if (
 				n>=1 and
@@ -86,10 +92,11 @@ function tick()
 				add(pows,n)
 			end
 			deli(pows,1)
-			-- update the wire
-			wire.ltik=_tick
+			-- update the device
+			dvc.ltik=_tick
 		end
 	end
+	--]]
 end
 
 function _update()
@@ -155,31 +162,41 @@ function _draw()
 			local x=cl*3+_grdlt
 			local y=rw*3+_grdtp
 			local idx=(rw-1)*_cols+cl
-			if _grid[idx]==0 then
-				pset(x,y,1)
-			else
-				local wire=_grid[idx]
-				local c=2
-				if wire.ltik==_tick then
-					c=3
+			pset(x,y,1)
+			if _grid[idx]!=0 then
+				local dvc=_grid[idx]
+				local dvcn=dvc.name
+				if dvcn=="wire" then
+					local c=2
+					if dvc.ltik==_tick then
+						c=3
+					end
+					local dr=_dirs[dvc.out]
+					local dy=dr[1]
+					local dx=dr[2]
+					pset(x,y,c)
+					pset(x+dx,y+dy,c)
+					pset(x+2*dx,y+2*dy,c)
+				elseif dvcn=="trip" then
+					rect(x-1,y-1,x+1,y+1,4)
+					local c=2
+					if dvc.ltik==_tick then
+						c=3
+					end
+					local dr=_dirs[dvc.out]
+					local dy=dr[1]
+					local dx=dr[2]
+					pset(x,y,c)
+					pset(x+dx,y+dy,c)
+					pset(x+2*dx,y+2*dy,c)
 				end
-				local dr=_dirs[wire.out]
-				local dy=dr[1]
-				local dx=dr[2]
-				pset(x,y,c)
-				pset(x+dx,y+dy,c)
-				pset(x+2*dx,y+2*dy,c)
 			end
 		end
 	end
 	-- draw cursor
 	local lt=_cl*3+_grdlt
 	local tp=_rw*3+_grdtp
-	if t()%0.5<0.25 then
-		rect(lt-1,tp-1,lt+1,tp+1,4)
-	else
-		rect(lt-1,tp-1,lt+1,tp+1,1)
-	end
+	rect(lt-2,tp-2,lt+2,tp+2,1)
 	print(#_dvcs,116,120,1)
 end
 __gfx__
