@@ -8,9 +8,18 @@ __lua__
 _version=1
 cartdata("sestrenexsis_nandgate_1")
 
+function newwire(o)
+	local res={
+		out=o,
+		tik=-1
+	}
+	return res
+end
+
 function _init()
 	-- common vars
 	---[[
+	_tick=0
 	_pals={
 		{[0]= 1,13, 2,14, 7},
 		{[0]= 0, 5, 3,11, 7}
@@ -27,10 +36,6 @@ function _init()
 	for i=1,_rows*_cols do
 		add(_grid,0)
 	end
-	_pow=16
-	local i=_cols*flr(_rows*0.5)+1
-	_grid[i]=_pow
-	add(_objs,i)
 	assert(#_grid==_rows*_cols)
 	_grdtp=15
 	_grdlt=15
@@ -49,9 +54,14 @@ function _init()
 		{ 0,-1,      -1}, -- west
 		{-1,-1,-_cols-1}, -- northwest
 		}
+	-- add a starting wire
+	local i=_cols*flr(_rows*0.5)+1
+	_grid[i]=newwire(4)
+	add(_objs,i)
 end
 
 function _update()
+	_tick=(_tick+1)%32768
 	-- input
 	local lcl=_cl
 	local lrw=_rw
@@ -77,7 +87,7 @@ function _update()
 					v[1]==drw and
 					v[2]==dcl
 				) then
-					_grid[lidx]=k
+					_grid[lidx]=newwire(k)
 					add(_objs,lidx)
 					break
 				end
@@ -87,6 +97,13 @@ function _update()
 		-- remove wire if exists
 		_grid[cidx]=0
 		del(_objs,cidx)
+	end
+	-- tick
+	if _tick%2==1 then
+		for i in all(_objs) do
+			local wire=_grid[i]
+			wire.tik=_tick
+		end
 	end
 end
 
@@ -113,16 +130,18 @@ function _draw()
 			local idx=(rw-1)*_cols+cl
 			if _grid[idx]==0 then
 				pset(x,y,1)
-			elseif _grid[idx]==_pow then
-				rect(x-1,y-1,x+1,y+1,4)
-				line(x,y,x+2,y,3)
 			else
-				local dr=_dirs[_grid[idx]]
+				local wire=_grid[idx]
+				local c=2
+				if wire.tik==_tick then
+					c=3
+				end
+				local dr=_dirs[wire.out]
 				local dy=dr[1]
 				local dx=dr[2]
-				pset(x,y,2)
-				pset(x+dx,y+dy,2)
-				pset(x+2*dx,y+2*dy,2)
+				pset(x,y,c)
+				pset(x+dx,y+dy,c)
+				pset(x+2*dx,y+2*dy,c)
 			end
 		end
 	end
