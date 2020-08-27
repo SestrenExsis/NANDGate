@@ -25,9 +25,9 @@ function newwire(o)
 	return res
 end
 
-function newtrip(o)
-	local res=newdevice("trip",o)
-	res.on=false
+function newflip(o)
+	local res=newdevice("flip",o)
+	res.on=true
 	return res
 end
 
@@ -68,35 +68,41 @@ function _init()
 		{ 0,-1,      -1}, -- west
 		{-1,-1,-_cols-1}, -- northwest
 		}
-	-- add a starting trip
-	_powidx=_cols*flr(_rows*0.5)+1
-	_grid[_powidx]=newtrip(4)
-	add(_dvcs,_powidx)
+	-- add a starting flip
+	local i=_cols*flr(_rows*0.5)+1
+	_grid[i]=newflip(4)
+	add(_dvcs,i)
 end
 
 function tick()
 	_tick=(_tick+1)%32768
-	if #_dvcs>0 then
-		local pows={_dvcs[1]}
-		while #pows>0 do
-			local idx=pows[1]
-			local dvc=_grid[idx]
-			local ofs=_dirs[dvc.out][3]
-			local n=idx+ofs
-			if (
-				n>=1 and
-				n<=#_grid and
-				_grid[n]!=0 and
-				_grid[n].ltik<_tick
-			) then
-				add(pows,n)
-			end
-			deli(pows,1)
-			-- update the device
-			dvc.ltik=_tick
+	local srcs={}
+	for i in all(_dvcs) do
+		local dvc=_grid[i]
+		if (
+			dvc.name=="flip" and
+			dvc.on
+		) then
+			add(srcs,i)
 		end
 	end
-	--]]
+	while #srcs>0 do
+		local idx=srcs[1]
+		local dvc=_grid[idx]
+		local ofs=_dirs[dvc.out][3]
+		local n=idx+ofs
+		if (
+			n>=1 and
+			n<=#_grid and
+			_grid[n]!=0 and
+			_grid[n].ltik<_tick
+		) then
+			add(srcs,n)
+		end
+		deli(srcs,1)
+		-- update the device
+		dvc.ltik=_tick
+	end
 end
 
 function _update()
@@ -129,6 +135,11 @@ function _update()
 					add(_dvcs,lidx)
 					break
 				end
+			end
+		elseif btnp(❎) then
+			local dvc=_grid[cidx]
+			if dvc.name=="flip" then
+				dvc.on=not dvc.on
 			end
 		end
 	elseif btn(🅾️) then
@@ -177,7 +188,7 @@ function _draw()
 					pset(x,y,c)
 					pset(x+dx,y+dy,c)
 					pset(x+2*dx,y+2*dy,c)
-				elseif dvcn=="trip" then
+				elseif dvcn=="flip" then
 					rect(x-1,y-1,x+1,y+1,4)
 					local c=2
 					if dvc.ltik==_tick then
