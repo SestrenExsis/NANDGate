@@ -5,8 +5,14 @@ __lua__
 -- by sestrenexsis
 -- github.com/sestrenexsis/nandgate
 
+_me="sestrenexsis"
+_cart="nandgate"
+cartdata(_me.."_".._cart.."_1")
 _version=1
-cartdata("sestrenexsis_nandgate_1")
+
+--disable button repeating
+poke(0x5f5c,255)
+poke(0x5f5d,255)
 
 function newdevice(
 	n, -- device name
@@ -143,9 +149,17 @@ function _update()
 			end
 		end
 	elseif btn(🅾️) then
-		-- remove wire if exists
-		_grid[cidx]=0
-		del(_dvcs,cidx)
+		-- remove device if exists
+		-- add new flip if empty
+		if btnp(🅾️) or cidx!=lidx then
+			if _grid[cidx]==0 then
+				_grid[cidx]=newflip(4)
+				add(_dvcs,cidx)
+			else
+				_grid[cidx]=0
+				del(_dvcs,cidx)
+			end
+		end
 	end
 	if btnp(⬆️,1) then
 		tick()
