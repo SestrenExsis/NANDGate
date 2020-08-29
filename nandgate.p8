@@ -15,12 +15,12 @@ poke(0x5f5c,255)
 poke(0x5f5d,255)
 
 function newdevice(
-	n, -- device name
-	o  -- output(s)
+	n, -- device name : string
+	o  -- output      : number
 	)
 	local res={
 		name=n,
-		out=o,
+		outs={o},
 		ltik=-1 -- last powered tick
 	}
 	return res
@@ -74,10 +74,16 @@ function _init()
 		{ 0,-1,      -1}, -- west
 		{-1,-1,-_cols-1}, -- northwest
 		}
+	_opps={1,6,7,8,9,2,3,4,5}
 	-- add a starting flip
 	local i=_cols*flr(_rows*0.5)+1
 	_grid[i]=newflip(4)
 	add(_dvcs,i)
+	local wire=newwire(4)
+	add(wire.outs,2)
+	add(wire.outs,6)
+	_grid[i+1]=wire
+	add(_dvcs,i+1)
 end
 
 function tick()
@@ -86,6 +92,7 @@ function tick()
 	for i in all(_dvcs) do
 		local dvc=_grid[i]
 		if (
+			dvc!=0 and
 			dvc.name=="flip" and
 			dvc.on
 		) then
@@ -95,15 +102,17 @@ function tick()
 	while #srcs>0 do
 		local idx=srcs[1]
 		local dvc=_grid[idx]
-		local ofs=_dirs[dvc.out][3]
-		local n=idx+ofs
-		if (
-			n>=1 and
-			n<=#_grid and
-			_grid[n]!=0 and
-			_grid[n].ltik<_tick
-		) then
-			add(srcs,n)
+		for out in all(dvc.outs) do
+			local ofs=_dirs[out][3]
+			local n=idx+ofs
+			if (
+				n>=1 and
+				n<=#_grid and
+				_grid[n]!=0 and
+				_grid[n].ltik<_tick
+			) then
+				add(srcs,n)
+			end
 		end
 		deli(srcs,1)
 		-- update the device
@@ -196,24 +205,28 @@ function _draw()
 					if dvc.ltik==_tick then
 						c=3
 					end
-					local dr=_dirs[dvc.out]
-					local dy=dr[1]
-					local dx=dr[2]
-					pset(x,y,c)
-					pset(x+dx,y+dy,c)
-					pset(x+2*dx,y+2*dy,c)
+					for out in all(dvc.outs) do
+						local dr=_dirs[out]
+						local dy=dr[1]
+						local dx=dr[2]
+						pset(x,y,c)
+						pset(x+dx,y+dy,c)
+						pset(x+2*dx,y+2*dy,c)
+					end
 				elseif dvcn=="flip" then
 					rect(x-1,y-1,x+1,y+1,4)
 					local c=2
 					if dvc.ltik==_tick then
 						c=3
 					end
-					local dr=_dirs[dvc.out]
-					local dy=dr[1]
-					local dx=dr[2]
-					pset(x,y,c)
-					pset(x+dx,y+dy,c)
-					pset(x+2*dx,y+2*dy,c)
+					for out in all(dvc.outs) do
+						local dr=_dirs[out]
+						local dy=dr[1]
+						local dx=dr[2]
+						pset(x,y,c)
+						pset(x+dx,y+dy,c)
+						pset(x+2*dx,y+2*dy,c)
+					end
 				end
 			end
 		end
