@@ -37,6 +37,10 @@ function newflip(o)
 	return res
 end
 
+function connect(idx1,idx2)
+	
+end
+
 function _init()
 	-- common vars
 	_tick=0
@@ -50,8 +54,8 @@ function _init()
 		pal(i,_pal[i],1)
 	end
 	-- grid
-	_rows=16 --36
-	_cols=16 --36
+	_rows=32
+	_cols=32
 	_grid={}
 	for i=1,_rows*_cols do
 		add(_grid,0)
