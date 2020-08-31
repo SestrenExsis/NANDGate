@@ -14,19 +14,18 @@ _version=1
 poke(0x5f5c,255)
 poke(0x5f5d,255)
 
-_sz=32
 -- directions
 _dirs={
-	-- {row,col,index}
-	{ 0, 0,     0}, -- none
-	{-1, 0,-_sz  }, -- north
-	{-1, 1,-_sz+1}, -- northeast
-	{ 0, 1,     1}, -- east
-	{ 1, 1, _sz+1}, -- southeast
-	{ 1, 0, _sz  }, -- south
-	{ 1,-1, _sz-1}, -- southwest
-	{ 0,-1,    -1}, -- west
-	{-1,-1,-_sz-1}, -- northwest
+	-- {row,col}
+	{ 0, 0}, -- none
+	{-1, 0}, -- north
+	{-1, 1}, -- northeast
+	{ 0, 1}, -- east
+	{ 1, 1}, -- southeast
+	{ 1, 0}, -- south
+	{ 1,-1}, -- southwest
+	{ 0,-1}, -- west
+	{-1,-1}, -- northwest
 	}
 _opps={1,6,7,8,9,2,3,4,5}
 
@@ -42,7 +41,18 @@ function newgrid(
 		lft=x,
 		top=y,
 		dat={},
-		dvcs={}
+		dvcs={},
+		dirs={
+			   0,
+			-w  ,
+			-w+1,
+			   1,
+			 w+1,
+			 w  ,
+			 w-1,
+			  -1,
+			-w-1
+		}
 	}
 	for i=1,w*h do
 		add(res.dat,0)
@@ -154,7 +164,7 @@ function _init()
 		pal(i,_pal[i],1)
 	end
 	-- grid
-	_grid=newgrid(_sz,_sz,15,15)
+	_grid=newgrid(32,32,15,15)
 	_rw=1
 	_cl=1
 	local w=_grid.wd
@@ -185,7 +195,7 @@ function tick(
 		local idx=srcs[1]
 		local dvc=g.dat[idx]
 		for out in all(dvc.outs) do
-			local ofs=_dirs[out][3]
+			local ofs=g.dirs[out]
 			local n=idx+ofs
 			if (
 				n>=1 and
@@ -229,6 +239,11 @@ function _update()
 	elseif btn(❎) then
 		-- connect 2 cells with wire
 		connect(_grid,lcl,lrw,_cl,_rw)
+		-- todo:
+		--   search neighbors for
+		--   wires connecting to this
+		--   cell and add "bridge"
+		--   connections as necessary
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
