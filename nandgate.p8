@@ -14,6 +14,22 @@ _version=1
 poke(0x5f5c,255)
 poke(0x5f5d,255)
 
+_sz=32
+-- directions
+_dirs={
+	-- {row,col,index}
+	{ 0, 0,     0}, -- none
+	{-1, 0,-_sz  }, -- north
+	{-1, 1,-_sz+1}, -- northeast
+	{ 0, 1,     1}, -- east
+	{ 1, 1, _sz+1}, -- southeast
+	{ 1, 0, _sz  }, -- south
+	{ 1,-1, _sz-1}, -- southwest
+	{ 0,-1,    -1}, -- west
+	{-1,-1,-_sz-1}, -- northwest
+	}
+_opps={1,6,7,8,9,2,3,4,5}
+
 function newgrid(
 	w, -- width      : number
 	h, -- height     : number
@@ -53,10 +69,7 @@ function addflip(
 	return res
 end
 
-function addwire(
-	g, -- grid       : table
-	x, -- x position : number
-	y, -- y position : number
+function newwire(
 	o  -- output     : number
 	)
 	local res={
@@ -64,11 +77,68 @@ function addwire(
 		outs={o},
 		ltik=-1 -- last powered tick
 	}
-	local i=g.wd*(y-1)+x
-	g.dat[i]=res
-	add(g.dvcs,i)
 	return res
 end
+
+function addifnew(l,n)
+	local new=true
+	for i in all(l) do
+		if i==n then
+			new=false
+			break
+		end
+	end
+	if new then
+		add(l,n)
+	end
+end
+
+function connect(
+	g,     -- grid      : table
+	sx,sy, -- start pos : numbers
+	ex,ey  -- end pos   : numbers
+	)
+	local si=g.wd*(sy-1)+sx
+	local sdy=mid(-1,ey-sy,1)
+	local sdx=mid(-1,ex-sx,1)
+	local so=1
+	for k,v in pairs(_dirs) do
+		if (
+			v[1]==sdy and
+			v[2]==sdx
+		) then
+			so=k
+			break
+		end
+	end
+	if g.dat[si]==0 then
+		g.dat[si]=newwire(so)
+		add(g.dvcs,si)
+	else
+		addifnew(g.dat[si].outs,so)
+	end
+	local ei=g.wd*(ey-1)+ex
+	local edy=mid(-1,sy-ey,1)
+	local edx=mid(-1,sx-ex,1)
+	local eo=1
+	for k,v in pairs(_dirs) do
+		if (
+			v[1]==edy and
+			v[2]==edx
+		) then
+			eo=k
+			break
+		end
+	end
+	if (
+		g.dat[ei]!=0 and
+		g.dat[ei].name=="wire"
+	) then
+		addifnew(g.dat[ei].outs,eo)
+	end
+end
+-->8
+-- game loops
 
 function _init()
 	-- common vars
@@ -84,28 +154,16 @@ function _init()
 		pal(i,_pal[i],1)
 	end
 	-- grid
-	_grid=newgrid(16,16,15,15)
+	_grid=newgrid(_sz,_sz,15,15)
 	_rw=1
 	_cl=1
 	local w=_grid.wd
-	_dirs={
-		-- {row,col,index}
-		{ 0, 0,   0}, -- none
-		{-1, 0,-w  }, -- north
-		{-1, 1,-w+1}, -- northeast
-		{ 0, 1,   1}, -- east
-		{ 1, 1, w+1}, -- southeast
-		{ 1, 0, w  }, -- south
-		{ 1,-1, w-1}, -- southwest
-		{ 0,-1,  -1}, -- west
-		{-1,-1,-w-1}, -- northwest
-		}
-	_opps={1,6,7,8,9,2,3,4,5}
 	-- add starting devices
 	addflip(_grid,1,8,4)
-	local wire=addwire(_grid,2,8,4)
-	add(wire.outs,2)
-	add(wire.outs,6)
+	connect(_grid,2,8,3,8)
+	connect(_grid,3,8,4,8)
+	connect(_grid,3,8,3,7)
+	connect(_grid,3,8,3,9)
 end
 
 function tick(
@@ -160,36 +218,28 @@ function _update()
 	end
 	local lidx=(lrw-1)*_grid.wd+lcl
 	local cidx=(_rw-1)*_grid.wd+_cl
-	if btn(❎) then
-		-- add wire if cell is free
-		if _grid.dat[cidx]==0 then
-			local drw=mid(-1,_rw-lrw,1)
-			local dcl=mid(-1,_cl-lcl,1)
-			for k,v in pairs(_dirs) do
-				if (
-					v[1]==drw and
-					v[2]==dcl
-				) then
-					addwire(_grid,lcl,lrw,k)
-					break
-				end
-			end
-		elseif btnp(❎) then
-			local dvc=_grid.dat[cidx]
-			if dvc.name=="flip" then
-				dvc.on=not dvc.on
-			end
-		end
-	elseif btn(🅾️) then
+	local cdvc=_grid.dat[cidx]
+	if (
+		btnp(❎) and
+		cdvc!=0 and
+		cdvc.name=="flip"
+	) then
+		-- toggle the flip
+		cdvc.on=not dvc.on
+	elseif btn(❎) then
+		-- connect 2 cells with wire
+		connect(_grid,lcl,lrw,_cl,_rw)
+	elseif (
+		btnp(🅾️) or
+		(btn(🅾️) and cidx!=lidx)
+	) then
 		-- remove device if exists
 		-- add new flip if empty
-		if btnp(🅾️) or cidx!=lidx then
-			if _grid.dat[cidx]==0 then
-				addflip(_grid,_cl,_rw,4)
-			else
-				_grid.dat[cidx]=0
-				del(_grid.dvcs,cidx)
-			end
+		if _grid.dat[cidx]==0 then
+			addflip(_grid,_cl,_rw,4)
+		else
+			_grid.dat[cidx]=0
+			del(_grid.dvcs,cidx)
 		end
 	end
 	if btnp(⬆️,1) then
