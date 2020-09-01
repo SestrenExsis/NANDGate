@@ -63,12 +63,11 @@ end
 function addflip(
 	g, -- grid       : table
 	x, -- x position : number
-	y, -- y position : number
-	o  -- output     : number
+	y  -- y position : number
 	)
 	local res={
 		name="flip",
-		outs={o},
+		outs={},
 		ltik=-1, -- last powered tick
 		on=true
 	}
@@ -168,7 +167,8 @@ function _init()
 	_cl=1
 	local w=_grid.wd
 	-- add starting devices
-	addflip(_grid,1,8,4)
+	addflip(_grid,1,8)
+	connect(_grid,1,8,2,8)
 	connect(_grid,2,8,3,8)
 	connect(_grid,3,8,4,8)
 	connect(_grid,3,8,3,7)
@@ -270,7 +270,7 @@ function _update()
 		-- remove device if exists
 		-- add new flip if empty
 		if _grid.dat[cidx]==0 then
-			addflip(_grid,_cl,_rw,4)
+			addflip(_grid,_cl,_rw)
 		else
 			_grid.dat[cidx]=0
 			del(_grid.dvcs,cidx)
