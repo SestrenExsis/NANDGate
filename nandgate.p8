@@ -15,8 +15,7 @@ poke(0x5f5c,255)
 poke(0x5f5d,255)
 
 -- directions
-_dirs={
-	-- {row,col}
+_dirs={ -- {row,col}
 	{ 0, 0}, -- none
 	{-1, 0}, -- north
 	{-1, 1}, -- northeast
@@ -237,13 +236,33 @@ function _update()
 		-- toggle the flip
 		cdvc.on=not dvc.on
 	elseif btn(❎) then
-		-- connect 2 cells with wire
 		connect(_grid,lcl,lrw,_cl,_rw)
-		-- todo:
-		--   search neighbors for
-		--   wires connecting to this
-		--   cell and add "bridge"
-		--   connections as necessary
+		--[[
+		connect 2 cells with wire,
+		then search neighbors for 
+		wires connecting to this cell
+		and add "bridge" connections
+		as necessary
+		--]]
+		for i=2,#_grid.dirs do
+			local ncl=_cl+_dirs[i][2]
+			local nrw=_rw+_dirs[i][1]
+			local nidx=cidx+_grid.dirs[i]
+			local ndvc=_grid.dat[nidx]
+			if (
+				ndvc!=0 and
+				nidx>=1 and
+				nidx<=#_grid.dat
+			) then
+				for out in all(ndvc.outs) do
+					if _opps[out]==i then
+						connect(_grid,_cl,_rw,ncl,nrw)
+						break
+					end
+				end
+			end
+		end
+		--]]
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
