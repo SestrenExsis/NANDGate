@@ -234,7 +234,7 @@ function _update()
 		cdvc.name=="flip"
 	) then
 		-- toggle the flip
-		cdvc.on=not dvc.on
+		cdvc.on=not cdvc.on
 	elseif btn(❎) then
 		connect(_grid,lcl,lrw,_cl,_rw)
 		--[[
