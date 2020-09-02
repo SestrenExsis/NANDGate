@@ -77,6 +77,23 @@ function addflip(
 	return res
 end
 
+function addnand(
+	g, -- grid       : table
+	x, -- x position : number
+	y  -- y position : number
+	)
+	local res={
+		name="nand",
+		ltika=-1, -- last north tick
+		ltikb=-1, -- last south tick
+		ltik=-1   -- last nand tick
+	}
+	local i=g.wd*(y-1)+x
+	g.dat[i]=res
+	add(g.dvcs,i)
+	return res
+end
+
 function newwire(
 	o  -- output     : number
 	)
@@ -167,12 +184,19 @@ function _init()
 	_cl=1
 	local w=_grid.wd
 	-- add starting devices
-	addflip(_grid,1,8)
-	connect(_grid,1,8,2,8)
-	connect(_grid,2,8,3,8)
-	connect(_grid,3,8,4,8)
-	connect(_grid,3,8,3,7)
-	connect(_grid,3,8,3,9)
+	-- f+..
+	-- .n--
+	-- f+..
+	addflip(_grid,1,1)
+	addnand(_grid,2,2)
+	addflip(_grid,1,3)
+	connect(_grid,1,1,2,1)
+	connect(_grid,2,1,2,2)
+	connect(_grid,1,3,2,3)
+	connect(_grid,2,3,2,2)
+	connect(_grid,2,2,3,2)
+	connect(_grid,3,2,4,2)
+	--addnand(_grid,
 end
 
 function tick(
@@ -184,7 +208,10 @@ function tick(
 		local dvc=g.dat[i]
 		if (
 			dvc!=0 and
-			dvc.name=="flip" and
+			(
+				dvc.name=="flip" or
+				dvc.name=="nand"
+			) and
 			dvc.on
 		) then
 			add(srcs,i)
@@ -207,7 +234,33 @@ function tick(
 		end
 		deli(srcs,1)
 		-- update the device
+		--[[
+		todo
+			update nand's a and b ticks
+			based on incoming direction
+		--]]
 		dvc.ltik=_tick
+		if dvc.name=="nand" then
+			local idxa=idx+g.dirs[2]
+			local idxb=idx+g.dirs[6]
+			if (
+				idxa>=1 and
+				idxa<=#g.dat and
+				idxb>=1 and
+				idxb<=#g.dat
+			) then
+				local dvca=g.dat[idxa]
+				local dvcb=g.dat[idxb]
+				if (
+					dvca!=0 and
+					dvca.ltik==_tick and
+					dvcb!=0 and
+					dvcb.ltik==_tick
+				) then
+					dvc.ltik=-1
+				end
+			end
+		end
 	end
 end
 
@@ -333,6 +386,20 @@ function _draw()
 						pset(x+dx,y+dy,c)
 						pset(x+2*dx,y+2*dy,c)
 					end
+				elseif dvcn=="nand" then
+					line(x,y-1,x,y+1,4)
+					pset(x+1,y,4)
+					local c=2
+					if dvc.ltik==_tick then
+						c=3
+					end
+					local dr=_dirs[4]
+					local dy=dr[1]
+					local dx=dr[2]
+					--pset(x,y,c)
+					--pset(x+dx,y+dy,c)
+					pset(x+2*dx,y+2*dy,c)
+					pset(x+3*dx,y+3*dy,c)
 				end
 			end
 		end
