@@ -84,9 +84,8 @@ function addnand(
 	)
 	local res={
 		name="nand",
-		ltika=-1, -- last north tick
-		ltikb=-1, -- last south tick
-		ltik=-1   -- last nand tick
+		ltika=-1, -- last input ticks
+		ltikb=-1
 	}
 	local i=g.wd*(y-1)+x
 	g.dat[i]=res
@@ -194,8 +193,8 @@ function _init()
 	connect(_grid,2,1,2,2)
 	connect(_grid,1,3,2,3)
 	connect(_grid,2,3,2,2)
-	connect(_grid,2,2,3,2)
-	connect(_grid,3,2,4,2)
+	--connect(_grid,2,2,3,2)
+	--connect(_grid,3,2,4,2)
 	--addnand(_grid,
 end
 
@@ -208,10 +207,7 @@ function tick(
 		local dvc=g.dat[i]
 		if (
 			dvc!=0 and
-			(
-				dvc.name=="flip" or
-				dvc.name=="nand"
-			) and
+			dvc.on!=nil and
 			dvc.on
 		) then
 			add(srcs,i)
@@ -227,39 +223,24 @@ function tick(
 				n>=1 and
 				n<=#g.dat and
 				g.dat[n]!=0 and
-				g.dat[n].ltik<_tick
+				(
+					g.dat[n].name=="nand" or
+					g.dat[n].ltik<_tick
+				)
 			) then
 				add(srcs,n)
 			end
 		end
 		deli(srcs,1)
 		-- update the device
-		--[[
-		todo
-			update nand's a and b ticks
-			based on incoming direction
-		--]]
-		dvc.ltik=_tick
 		if dvc.name=="nand" then
-			local idxa=idx+g.dirs[2]
-			local idxb=idx+g.dirs[6]
-			if (
-				idxa>=1 and
-				idxa<=#g.dat and
-				idxb>=1 and
-				idxb<=#g.dat
-			) then
-				local dvca=g.dat[idxa]
-				local dvcb=g.dat[idxb]
-				if (
-					dvca!=0 and
-					dvca.ltik==_tick and
-					dvcb!=0 and
-					dvcb.ltik==_tick
-				) then
-					dvc.ltik=-1
-				end
+			if dvc.ltika==_tick then
+				dvc.ltikb=_tick
+			else
+				dvc.ltika=_tick
 			end
+		else
+			dvc.ltik=_tick
 		end
 	end
 end
@@ -389,17 +370,16 @@ function _draw()
 				elseif dvcn=="nand" then
 					line(x,y-1,x,y+1,4)
 					pset(x+1,y,4)
-					local c=2
-					if dvc.ltik==_tick then
-						c=3
+					local c=3
+					if (
+						dvc.ltika==_tick and
+						dvc.ltikb==_tick
+					) then
+						c=2
 					end
-					local dr=_dirs[4]
-					local dy=dr[1]
-					local dx=dr[2]
-					--pset(x,y,c)
-					--pset(x+dx,y+dy,c)
-					pset(x+2*dx,y+2*dy,c)
-					pset(x+3*dx,y+3*dy,c)
+					print(dvc.ltika,104,114,1)
+					print(dvc.ltikb,104,120,1)
+					rectfill(x+2,y-1,x+2,y+1,c)
 				end
 			end
 		end
