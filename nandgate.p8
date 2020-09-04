@@ -222,13 +222,18 @@ function tick(
 			if (
 				n>=1 and
 				n<=#g.dat and
-				g.dat[n]!=0 and
-				(
-					g.dat[n].name=="nand" or
-					g.dat[n].ltik<_tick
-				)
+				g.dat[n]!=0
 			) then
-				add(srcs,n)
+				local ndvc=g.dat[n]
+				if ndvc.name=="nand" then
+					if ndvc.ltikb<_tick then
+						add(srcs,n)
+					end
+				else
+					if ndvc.ltik<_tick then
+						add(srcs,n)
+					end
+				end
 			end
 		end
 		deli(srcs,1)
