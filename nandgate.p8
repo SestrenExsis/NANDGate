@@ -178,7 +178,7 @@ function _init()
 		pal(i,_pal[i],1)
 	end
 	-- grid
-	_grid=newgrid(32,32,15,15)
+	_grid=newgrid(32,32,12,12)
 	_rw=1
 	_cl=1
 	local w=_grid.wd
@@ -220,6 +220,7 @@ function tick(
 			local ofs=g.dirs[out]
 			local n=idx+ofs
 			if (
+				n!=idx and
 				n>=1 and
 				n<=#g.dat and
 				g.dat[n]!=0
@@ -382,8 +383,6 @@ function _draw()
 					) then
 						c=2
 					end
-					print(dvc.ltika,104,114,1)
-					print(dvc.ltikb,104,120,1)
 					rectfill(x+2,y-1,x+2,y+1,c)
 				end
 			end
@@ -393,7 +392,8 @@ function _draw()
 	local lt=_cl*3+_grid.lft
 	local tp=_rw*3+_grid.top
 	rect(lt-2,tp-2,lt+2,tp+2,1)
-	print(#_grid.dvcs,116,120,1)
+	-- draw debug info
+	print(#_grid.dvcs,1,120,1)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
