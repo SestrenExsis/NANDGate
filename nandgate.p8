@@ -84,6 +84,7 @@ function addnand(
 	)
 	local res={
 		name="nand",
+		outs={},
 		ltika=-1, -- last input ticks
 		ltikb=-1
 	}
@@ -193,9 +194,9 @@ function _init()
 	connect(_grid,2,1,2,2)
 	connect(_grid,1,3,2,3)
 	connect(_grid,2,3,2,2)
-	--connect(_grid,2,2,3,2)
-	--connect(_grid,3,2,4,2)
-	--addnand(_grid,
+	--
+	connect(_grid,2,2,3,2)
+	connect(_grid,3,2,4,2)
 end
 
 function tick(
@@ -296,7 +297,9 @@ function _update()
 			) then
 				for out in all(ndvc.outs) do
 					if _opps[out]==i then
-						connect(_grid,_cl,_rw,ncl,nrw)
+						connect(
+							_grid,_cl,_rw,ncl,nrw
+						)
 						break
 					end
 				end
@@ -365,9 +368,7 @@ function _draw()
 				local dr=_dirs[out]
 				local dy=dr[1]
 				local dx=dr[2]
-				pset(x,y,c)
-				pset(x+dx,y+dy,c)
-				pset(x+2*dx,y+2*dy,c)
+				line(x,y,x+2*dx,y+2*dy,c)
 			end
 		else
 			add(todo,idx)
@@ -393,9 +394,7 @@ function _draw()
 				local dr=_dirs[out]
 				local dy=dr[1]
 				local dx=dr[2]
-				pset(x,y,c)
-				pset(x+dx,y+dy,c)
-				pset(x+2*dx,y+2*dy,c)
+				line(x,y,x+2*dx,y+2*dy,c)
 			end
 		elseif dvcn=="nand" then
 			line(x,y-1,x,y+1,4)
@@ -407,7 +406,12 @@ function _draw()
 			) then
 				c=2
 			end
-			rectfill(x+2,y-1,x+2,y+1,c)
+			for out in all(dvc.outs) do
+				local dr=_dirs[out]
+				local dy=dr[1]
+				local dx=dr[2]
+				line(x,y,x+2*dx,y+2*dy,c)
+			end
 		end
 	end
 	-- draw cursor
