@@ -336,56 +336,78 @@ function _draw()
 			lf+7,tp+3,
 			i)
 	end
-	-- draw grid and wires
+	-- draw grid
 	for rw=1,_grid.ht do
 		for cl=1,_grid.wd do
 			local x=cl*3+_grid.lft
 			local y=rw*3+_grid.top
 			local idx=(rw-1)*_grid.wd+cl
 			pset(x,y,1)
-			if _grid.dat[idx]!=0 then
-				local dvc=_grid.dat[idx]
-				local dvcn=dvc.name
-				if dvcn=="wire" then
-					local c=2
-					if dvc.ltik==_tick then
-						c=3
-					end
-					for out in all(dvc.outs) do
-						local dr=_dirs[out]
-						local dy=dr[1]
-						local dx=dr[2]
-						pset(x,y,c)
-						pset(x+dx,y+dy,c)
-						pset(x+2*dx,y+2*dy,c)
-					end
-				elseif dvcn=="flip" then
-					rect(x-1,y-1,x+1,y+1,4)
-					local c=2
-					if dvc.ltik==_tick then
-						c=3
-					end
-					for out in all(dvc.outs) do
-						local dr=_dirs[out]
-						local dy=dr[1]
-						local dx=dr[2]
-						pset(x,y,c)
-						pset(x+dx,y+dy,c)
-						pset(x+2*dx,y+2*dy,c)
-					end
-				elseif dvcn=="nand" then
-					line(x,y-1,x,y+1,4)
-					pset(x+1,y,4)
-					local c=3
-					if (
-						dvc.ltika==_tick and
-						dvc.ltikb==_tick
-					) then
-						c=2
-					end
-					rectfill(x+2,y-1,x+2,y+1,c)
-				end
+		end
+	end
+	-- draw wires
+	local todo={}
+	for idx in all(_grid.dvcs) do
+		local cl=(idx-1)%_grid.wd+1
+		local rw=flr(
+			(idx-1)/_grid.wd
+		)+1
+		local x=cl*3+_grid.lft
+		local y=rw*3+_grid.top
+		local dvc=_grid.dat[idx]
+		local dvcn=dvc.name
+		if dvcn=="wire" then
+			local c=2
+			if dvc.ltik==_tick then
+				c=3
 			end
+			for out in all(dvc.outs) do
+				local dr=_dirs[out]
+				local dy=dr[1]
+				local dx=dr[2]
+				pset(x,y,c)
+				pset(x+dx,y+dy,c)
+				pset(x+2*dx,y+2*dy,c)
+			end
+		else
+			add(todo,idx)
+		end
+	end
+	-- draw other devices
+	for idx in all(todo) do
+		local cl=(idx-1)%_grid.wd+1
+		local rw=flr(
+			(idx-1)/_grid.wd
+		)+1
+		local x=cl*3+_grid.lft
+		local y=rw*3+_grid.top
+		local dvc=_grid.dat[idx]
+		local dvcn=dvc.name
+		if dvcn=="flip" then
+			rect(x-1,y-1,x+1,y+1,4)
+			local c=2
+			if dvc.ltik==_tick then
+				c=3
+			end
+			for out in all(dvc.outs) do
+				local dr=_dirs[out]
+				local dy=dr[1]
+				local dx=dr[2]
+				pset(x,y,c)
+				pset(x+dx,y+dy,c)
+				pset(x+2*dx,y+2*dy,c)
+			end
+		elseif dvcn=="nand" then
+			line(x,y-1,x,y+1,4)
+			pset(x+1,y,4)
+			local c=3
+			if (
+				dvc.ltika==_tick and
+				dvc.ltikb==_tick
+			) then
+				c=2
+			end
+			rectfill(x+2,y-1,x+2,y+1,c)
 		end
 	end
 	-- draw cursor
