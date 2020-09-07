@@ -203,52 +203,63 @@ function tick(
 	g -- grid : table
 	)
 	_tick=(_tick+1)%32768
+	-- find initial signal sources
 	local srcs={}
-	for i in all(g.dvcs) do
-		local dvc=g.dat[i]
-		if (
-			dvc!=0 and
-			dvc.on!=nil and
-			dvc.on
-		) then
-			add(srcs,i)
+	for idx in all(g.dvcs) do
+		local dvc=g.dat[idx]
+		local outs={}
+		if dvc!=0 then
+			if dvc.name=="nand" then
+				if dvc.ltikb!=_tick-1 then
+					outs=dvc.outs
+				end
+			elseif dvc.name=="flip" then
+				if dvc.on then
+					dvc.ltik=_tick
+					outs=dvc.outs
+				end
+			end
+		end
+		for out in all(outs) do
+			local ofs=g.dirs[out]
+			local nidx=idx+ofs
+			if nidx!=idx then
+				add(srcs,nidx)
+			end
 		end
 	end
+	-- process signals
 	while #srcs>0 do
 		local idx=srcs[1]
-		local dvc=g.dat[idx]
-		for out in all(dvc.outs) do
-			local ofs=g.dirs[out]
-			local n=idx+ofs
-			if (
-				n!=idx and
-				n>=1 and
-				n<=#g.dat and
-				g.dat[n]!=0
-			) then
-				local ndvc=g.dat[n]
-				if ndvc.name=="nand" then
-					if ndvc.ltikb<_tick then
-						add(srcs,n)
-					end
+		if (
+			idx>=1 and
+			idx<=#g.dat and
+			g.dat[idx]!=0 and
+			g.dat[idx].ltik!=_tick
+		) then
+			-- update the device
+			local dvc=g.dat[idx]
+			if dvc.name=="nand" then
+				if dvc.ltika==_tick then
+					dvc.ltikb=_tick
 				else
-					if ndvc.ltik<_tick then
-						add(srcs,n)
+					dvc.ltika=_tick
+				end
+			else
+				dvc.ltik=_tick
+			end
+			-- only traverse wires
+			if dvc.name=="wire" then
+				for out in all(dvc.outs) do
+					local ofs=g.dirs[out]
+					local nidx=idx+ofs
+					if nidx!=idx then
+						add(srcs,nidx)
 					end
 				end
 			end
 		end
 		deli(srcs,1)
-		-- update the device
-		if dvc.name=="nand" then
-			if dvc.ltika==_tick then
-				dvc.ltikb=_tick
-			else
-				dvc.ltika=_tick
-			end
-		else
-			dvc.ltik=_tick
-		end
 	end
 end
 
@@ -396,6 +407,11 @@ function _draw()
 				local dx=dr[2]
 				line(x,y,x+2*dx,y+2*dy,c)
 			end
+			c=2
+			if dvc.on then
+				c=3
+			end
+			pset(x,y,c)
 		elseif dvcn=="nand" then
 			line(x,y-1,x,y+1,4)
 			pset(x+1,y,4)
