@@ -139,7 +139,7 @@ function connect(
 	if g.dat[si]==0 then
 		g.dat[si]=newwire(so)
 		add(g.dvcs,si)
-	else
+	elseif sdx!=0 or sdy!=0 then
 		addifnew(g.dat[si].outs,so)
 	end
 	local ei=g.wd*(ey-1)+ex
@@ -157,7 +157,8 @@ function connect(
 	end
 	if (
 		g.dat[ei]!=0 and
-		g.dat[ei].name=="wire"
+		g.dat[ei].name=="wire" and
+		(edx!=0 or edy!=0)
 	) then
 		addifnew(g.dat[ei].outs,eo)
 	end
@@ -322,8 +323,8 @@ function _update()
 							connect(
 								_grid,_cl,_rw,ncl,nrw
 							)
-							break
 						end
+						break
 					end
 				end
 			end
