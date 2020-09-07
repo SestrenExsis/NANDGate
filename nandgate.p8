@@ -190,13 +190,20 @@ function _init()
 	addflip(_grid,1,1)
 	addnand(_grid,2,2)
 	addflip(_grid,1,3)
+	addnand(_grid,4,2)
 	connect(_grid,1,1,2,1)
 	connect(_grid,2,1,2,2)
 	connect(_grid,1,3,2,3)
 	connect(_grid,2,3,2,2)
-	--
 	connect(_grid,2,2,3,2)
-	connect(_grid,3,2,4,2)
+	connect(_grid,3,2,3,1)
+	connect(_grid,3,1,4,1)
+	connect(_grid,4,1,4,2)
+	connect(_grid,3,2,3,3)
+	connect(_grid,3,3,4,3)
+	connect(_grid,4,3,4,2)
+	connect(_grid,4,2,5,2)
+	connect(_grid,5,2,6,2)
 end
 
 function tick(
@@ -308,10 +315,15 @@ function _update()
 			) then
 				for out in all(ndvc.outs) do
 					if _opps[out]==i then
-						connect(
-							_grid,_cl,_rw,ncl,nrw
-						)
-						break
+						if (
+							ndvc.name=="wire" or
+							out==8
+						) then
+							connect(
+								_grid,_cl,_rw,ncl,nrw
+							)
+							break
+						end
 					end
 				end
 			end
@@ -326,8 +338,15 @@ function _update()
 		if _grid.dat[cidx]==0 then
 			addflip(_grid,_cl,_rw)
 		else
-			_grid.dat[cidx]=0
-			del(_grid.dvcs,cidx)
+			local dvc=_grid.dat[cidx]
+			if dvc.name=="flip" then
+				_grid.dat[cidx]=0
+				del(_grid.dvcs,cidx)
+				addnand(_grid,_cl,_rw)
+			else
+				_grid.dat[cidx]=0
+				del(_grid.dvcs,cidx)
+			end
 		end
 	end
 	if btnp(⬆️,1) then
@@ -426,7 +445,8 @@ function _draw()
 				local dr=_dirs[out]
 				local dy=dr[1]
 				local dx=dr[2]
-				line(x,y,x+2*dx,y+2*dy,c)
+				pset(x+2*dx,y+2*dy,c)
+				--line(x,y,x+2*dx,y+2*dy,c)
 			end
 		end
 	end
@@ -436,6 +456,21 @@ function _draw()
 	rect(lt-2,tp-2,lt+2,tp+2,1)
 	-- draw debug info
 	print(#_grid.dvcs,1,120,1)
+	local cidx=(_rw-1)*_grid.wd+_cl
+	local cdvc=_grid.dat[cidx]
+	if (
+		cdvc!=0 and
+		cdvc.outs!=nil
+	) then
+		local x=_cl*3+_grid.lft
+		local y=_rw*3+_grid.top
+		for out in all(cdvc.outs) do
+			local dr=_dirs[out]
+			local dy=dr[1]
+			local dx=dr[2]
+			pset(x+2*dx,y+2*dy,11)
+		end
+	end
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
