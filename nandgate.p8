@@ -179,7 +179,7 @@ function connect(
 		g.dat[ei].name=="wire" and
 		(edx!=0 or edy!=0)
 	) then
-		addifnew(g.dat[ei].outs,eo)
+		--addifnew(g.dat[ei].outs,eo)
 	end
 end
 -->8
@@ -244,12 +244,11 @@ function _init()
 	connect(_grid,4,3,5,3)
 	connect(_grid,5,3,5,2)
 	connect(_grid,5,2,6,2)
-	connect(_grid,4,5,5,5)
+	connect(_grid,4,5,5,5) -- !!!
 	connect(_grid,5,5,5,6)
 	connect(_grid,4,6,4,5)
-	connect(_grid,3,6,4,6)
+	connect(_grid,3,6,4,6) -- !!!
 	connect(_grid,4,6,4,7)
-	connect(_grid,4,5,5,5)
 	connect(_grid,5,5,5,6)
 	connect(_grid,4,7,5,7)
 	connect(_grid,5,7,5,6)
@@ -311,7 +310,15 @@ function tick(
 				end
 			elseif dvc.name=="feed"then
 				-- todo: feed logic here
-				local todo=true
+				local dvc1=g.dat[idx-1]
+				if dvc1.ltik==_tick then
+					dvc.tiks[4]=_tick
+				end
+				local idx2=idx-_grid.wd
+				local dvc2=g.dat[idx2]
+				if dvc2.ltik==_tick then
+					dvc.tiks[6]=_tick
+				end
 			else
 				dvc.ltik=_tick
 			end
@@ -393,8 +400,7 @@ function _update()
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
 	) then
-		-- remove device if exists
-		-- add new flip if empty
+		-- cycle through devices
 		if _grid.dat[cidx]==0 then
 			addflip(_grid,_cl,_rw)
 		else
@@ -525,12 +531,12 @@ function _draw()
 					nidx>=1 and
 					nidx<=#_grid.dat
 				) then
-					local c=3
+					local c=2
 					local dr=_dirs[out]
 					local dy=dr[1]
 					local dx=dr[2]
 					if dvc.tiks[out]==_tick then
-						c=2
+						c=3
 					end
 					line(
 						x+dx,y+dy,x+2*dx,y+2*dy,c
