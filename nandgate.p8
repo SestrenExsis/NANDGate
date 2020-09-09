@@ -7,6 +7,7 @@ __lua__
 
 _me="sestrenexsis"
 _cart="nandgate"
+-- "bredbord"?
 cartdata(_me.."_".._cart.."_1")
 _version=1
 
@@ -87,6 +88,24 @@ function addnand(
 		outs={},
 		ltika=-1, -- last input ticks
 		ltikb=-1
+	}
+	local i=g.wd*(y-1)+x
+	g.dat[i]=res
+	add(g.dvcs,i)
+	return res
+end
+
+function addfeed(
+	g, -- grid       : table
+	x, -- x position : number
+	y  -- y position : number
+	)
+	local res={
+		name="feed",
+		outs={4,6},
+		tiks={
+			-1,-1,-1,-1,-1,-1,-1,-1,-1
+		}
 	}
 	local i=g.wd*(y-1)+x
 	g.dat[i]=res
@@ -185,26 +204,56 @@ function _init()
 	_cl=1
 	local w=_grid.wd
 	-- add starting devices
-	-- f+..
-	-- .n--
-	-- f+..
 	addflip(_grid,1,1)
-	addnand(_grid,2,2)
-	addflip(_grid,1,3)
-	addnand(_grid,4,2)
+	addflip(_grid,1,4)
+	addnand(_grid,3,2)
+	addnand(_grid,5,2)
+	addnand(_grid,4,5)
+	addnand(_grid,3,6)
+	addnand(_grid,5,6)
+	addnand(_grid,4,7)
+	addfeed(_grid,2,4)
 	connect(_grid,1,1,2,1)
+	connect(_grid,2,1,3,1)
+	connect(_grid,3,1,3,2)
 	connect(_grid,2,1,2,2)
-	connect(_grid,1,3,2,3)
-	connect(_grid,2,3,2,2)
-	connect(_grid,2,2,3,2)
-	connect(_grid,3,2,3,1)
-	connect(_grid,3,1,4,1)
-	connect(_grid,4,1,4,2)
-	connect(_grid,3,2,3,3)
-	connect(_grid,3,3,4,3)
-	connect(_grid,4,3,4,2)
-	connect(_grid,4,2,5,2)
+	connect(_grid,2,2,2,3)
+	connect(_grid,2,3,2,4)
+	connect(_grid,2,4,2,5)
+	connect(_grid,2,5,2,6)
+	connect(_grid,2,6,2,7)
+	connect(_grid,2,7,2,8)
+	connect(_grid,2,8,3,8)
+	connect(_grid,3,8,3,7)
+	connect(_grid,3,7,3,6)
+	connect(_grid,3,8,4,8)
+	connect(_grid,4,8,4,7)
+	connect(_grid,1,4,2,4)
+	connect(_grid,2,4,3,4)
+	connect(_grid,3,4,4,4)
+	connect(_grid,4,4,4,5)
+	connect(_grid,3,4,3,3)
+	connect(_grid,3,3,3,2)
+	connect(_grid,3,4,3,5)
+	connect(_grid,3,5,3,6)
+	connect(_grid,3,2,4,2)
+	connect(_grid,4,2,4,1)
+	connect(_grid,4,1,5,1)
+	connect(_grid,5,1,5,2)
+	connect(_grid,4,2,4,3)
+	connect(_grid,4,3,5,3)
+	connect(_grid,5,3,5,2)
 	connect(_grid,5,2,6,2)
+	connect(_grid,4,5,5,5)
+	connect(_grid,5,5,5,6)
+	connect(_grid,4,6,4,5)
+	connect(_grid,3,6,4,6)
+	connect(_grid,4,6,4,7)
+	connect(_grid,4,5,5,5)
+	connect(_grid,5,5,5,6)
+	connect(_grid,4,7,5,7)
+	connect(_grid,5,7,5,6)
+	connect(_grid,5,6,6,6)
 end
 
 function tick(
@@ -225,6 +274,13 @@ function tick(
 				if dvc.on then
 					dvc.ltik=_tick
 					outs=dvc.outs
+				end
+			elseif dvc.name=="feed" then
+				if dvc.tiks[4]==_tick-1 then
+					add(outs,4)
+				end
+				if dvc.tiks[6]==_tick-1 then
+					add(outs,6)
 				end
 			end
 		end
@@ -253,6 +309,9 @@ function tick(
 				else
 					dvc.ltika=_tick
 				end
+			elseif dvc.name=="feed"then
+				-- todo: feed logic here
+				local todo=true
 			else
 				dvc.ltik=_tick
 			end
@@ -344,6 +403,10 @@ function _update()
 				_grid.dat[cidx]=0
 				del(_grid.dvcs,cidx)
 				addnand(_grid,_cl,_rw)
+			elseif dvc.name=="nand" then
+				_grid.dat[cidx]=0
+				del(_grid.dvcs,cidx)
+				addfeed(_grid,_cl,_rw)
 			else
 				_grid.dat[cidx]=0
 				del(_grid.dvcs,cidx)
@@ -448,6 +511,31 @@ function _draw()
 				local dx=dr[2]
 				pset(x+2*dx,y+2*dy,c)
 				--line(x,y,x+2*dx,y+2*dy,c)
+			end
+		elseif dvcn=="feed" then
+			pset(x,y,4)
+			for out in all(dvc.outs) do
+				local ofs=_grid.dirs[out]
+				local nidx=idx+ofs
+				local ndvc=_grid.dat[nidx]
+				if (
+					nidx!=idx and
+					ndvc!=nil and
+					ndvc!=0 and
+					nidx>=1 and
+					nidx<=#_grid.dat
+				) then
+					local c=3
+					local dr=_dirs[out]
+					local dy=dr[1]
+					local dx=dr[2]
+					if dvc.tiks[out]==_tick then
+						c=2
+					end
+					line(
+						x+dx,y+dy,x+2*dx,y+2*dy,c
+					)
+				end
 			end
 		end
 	end
