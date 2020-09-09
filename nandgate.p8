@@ -17,17 +17,11 @@ poke(0x5f5d,255)
 
 -- directions
 _dirs={ -- {row,col}
-	{ 0, 0}, -- none
-	{-1, 0}, -- north
-	{-1, 1}, -- northeast
-	{ 0, 1}, -- east
-	{ 1, 1}, -- southeast
-	{ 1, 0}, -- south
-	{ 1,-1}, -- southwest
-	{ 0,-1}, -- west
-	{-1,-1}, -- northwest
+	{ 1,-1},{ 1, 0},{ 1, 1}, --123
+	{ 0,-1},{ 0, 0},{ 0, 1}, --456
+	{-1,-1},{-1, 0},{-1, 1}  --789
 	}
-_opps={1,6,7,8,9,2,3,4,5}
+_opps={9,8,7,6,5,4,3,2,1}
 
 function newgrid(
 	w, -- width      : number
@@ -43,15 +37,9 @@ function newgrid(
 		dat={},
 		dvcs={},
 		dirs={
-			   0,
-			-w  ,
-			-w+1,
-			   1,
-			 w+1,
-			 w  ,
-			 w-1,
-			  -1,
-			-w-1
+			 w-1, w  , w+1, -- 123
+			  -1,   0,   1, -- 456
+			-w-1,-w  ,-w+1  -- 789
 		}
 	}
 	for i=1,w*h do
@@ -102,9 +90,11 @@ function addfeed(
 	)
 	local res={
 		name="feed",
-		outs={4,6},
+		outs={2,6},
 		tiks={
-			-1,-1,-1,-1,-1,-1,-1,-1,-1
+			-1,-1,-1, --123
+			-1,-1,-1, --546
+			-1,-1,-1  --789
 		}
 	}
 	local i=g.wd*(y-1)+x
@@ -275,11 +265,11 @@ function tick(
 					outs=dvc.outs
 				end
 			elseif dvc.name=="feed" then
-				if dvc.tiks[4]==_tick-1 then
-					add(outs,4)
-				end
 				if dvc.tiks[6]==_tick-1 then
 					add(outs,6)
+				end
+				if dvc.tiks[2]==_tick-1 then
+					add(outs,2)
 				end
 			end
 		end
@@ -312,12 +302,12 @@ function tick(
 				-- todo: feed logic here
 				local dvc1=g.dat[idx-1]
 				if dvc1.ltik==_tick then
-					dvc.tiks[4]=_tick
+					dvc.tiks[6]=_tick
 				end
 				local idx2=idx-_grid.wd
 				local dvc2=g.dat[idx2]
 				if dvc2.ltik==_tick then
-					dvc.tiks[6]=_tick
+					dvc.tiks[2]=_tick
 				end
 			else
 				dvc.ltik=_tick
@@ -370,7 +360,7 @@ function _update()
 		and add "bridge" connections
 		as necessary
 		--]]
-		for i=2,#_grid.dirs do
+		for i=1,#_grid.dirs do
 			local ncl=_cl+_dirs[i][2]
 			local nrw=_rw+_dirs[i][1]
 			local nidx=cidx+_grid.dirs[i]
@@ -378,13 +368,14 @@ function _update()
 			if (
 				ndvc!=0 and
 				nidx>=1 and
-				nidx<=#_grid.dat
+				nidx<=#_grid.dat and
+				nidx!=cidx
 			) then
 				for out in all(ndvc.outs) do
 					if _opps[out]==i then
 						if (
 							ndvc.name=="wire" or
-							out==8
+							out==4
 						) then
 							connect(
 								_grid,_cl,_rw,ncl,nrw
