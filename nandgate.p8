@@ -74,6 +74,7 @@ function addnand(
 	local res={
 		name="nand",
 		outs={},
+		tiks={},  -- signals received
 		ltika=-1, -- last input ticks
 		ltikb=-1
 	}
@@ -91,11 +92,14 @@ function addfeed(
 	local res={
 		name="feed",
 		outs={2,6},
+		tiks={}  -- signals received
+		--[[
 		tiks={
 			-1,-1,-1, --123
 			-1,-1,-1, --456
 			-1,-1,-1  --789
 		}
+		--]]
 	}
 	local i=g.wd*(y-1)+x
 	g.dat[i]=res
@@ -256,7 +260,19 @@ function tick(
 		local outs={}
 		if dvc!=0 then
 			if dvc.name=="nand" then
-				if dvc.ltikb!=_tick-1 then
+				local sig8=false
+				local sig2=false
+				while #dvc.tiks>0 do
+					local tik=deli(
+						dvc.tiks,#dvc.tiks
+					)
+					if tik==8 then
+						sig8=true
+					elseif tik==2 then
+						sig2=true
+					end
+				end
+				if not(sig2 and sig8) then
 					outs=dvc.outs
 				end
 			elseif dvc.name=="flip" then
@@ -277,13 +293,15 @@ function tick(
 			local ofs=g.dirs[out]
 			local nidx=idx+ofs
 			if nidx!=idx then
-				add(srcs,nidx)
+				add(srcs,{idx,nidx})
 			end
 		end
 	end
 	-- process signals
 	while #srcs>0 do
-		local idx=srcs[1]
+		local src=srcs[1]
+		local lidx=src[1]
+		local idx=src[2]
 		if (
 			idx>=1 and
 			idx<=#g.dat and
@@ -293,13 +311,20 @@ function tick(
 			-- update the device
 			local dvc=g.dat[idx]
 			if dvc.name=="nand" then
+				local d=idx-lidx
+				if d==g.wd then
+					add(dvc.tiks,8)
+				elseif d==-g.wd then
+					add(dvc.tiks,2)
+				end
+				--[[
 				if dvc.ltika==_tick then
 					dvc.ltikb=_tick
 				else
 					dvc.ltika=_tick
 				end
+				--]]
 			elseif dvc.name=="feed"then
-				-- todo: feed logic here
 				for out in all(dvc.outs) do
 					local of=g.dirs[_opps[out]]
 					local nidx=idx+of
@@ -324,7 +349,7 @@ function tick(
 					local ofs=g.dirs[out]
 					local nidx=idx+ofs
 					if nidx!=idx then
-						add(srcs,nidx)
+						add(srcs,{idx,nidx})
 					end
 				end
 			end
@@ -506,8 +531,11 @@ function _draw()
 			pset(sx+1,sy,4)
 			local c=3
 			if (
+				#dvc.tiks==2
+			--[[
 				dvc.ltika==_tick and
 				dvc.ltikb==_tick
+				--]]
 			) then
 				c=2
 			end
