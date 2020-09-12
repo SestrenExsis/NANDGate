@@ -93,7 +93,7 @@ function addfeed(
 		outs={2,6},
 		tiks={
 			-1,-1,-1, --123
-			-1,-1,-1, --546
+			-1,-1,-1, --456
 			-1,-1,-1  --789
 		}
 	}
@@ -265,11 +265,11 @@ function tick(
 					outs=dvc.outs
 				end
 			elseif dvc.name=="feed" then
-				if dvc.tiks[6]==_tick-1 then
-					add(outs,6)
-				end
 				if dvc.tiks[2]==_tick-1 then
 					add(outs,2)
+				end
+				if dvc.tiks[6]==_tick-1 then
+					add(outs,6)
 				end
 			end
 		end
@@ -300,14 +300,20 @@ function tick(
 				end
 			elseif dvc.name=="feed"then
 				-- todo: feed logic here
-				local dvc1=g.dat[idx-1]
-				if dvc1.ltik==_tick then
-					dvc.tiks[6]=_tick
-				end
-				local idx2=idx-_grid.wd
-				local dvc2=g.dat[idx2]
-				if dvc2.ltik==_tick then
-					dvc.tiks[2]=_tick
+				for out in all(dvc.outs) do
+					local of=g.dirs[_opps[out]]
+					local nidx=idx+of
+					if (
+						nidx>=1 and
+						nidx<=#g.dat and
+						nidx!=idx and
+						g.dat[nidx]!=0
+					) then
+						local ndvc=g.dat[nidx]
+						if ndvc.ltik==_tick then
+							dvc.tiks[out]=_tick
+						end
+					end
 				end
 			else
 				dvc.ltik=_tick
