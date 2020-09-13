@@ -74,9 +74,7 @@ function addnand(
 	local res={
 		name="nand",
 		outs={},
-		tiks={},  -- signals received
-		ltika=-1, -- last input ticks
-		ltikb=-1
+		tiks={}  -- signals received
 	}
 	local i=g.wd*(y-1)+x
 	g.dat[i]=res
@@ -93,13 +91,6 @@ function addfeed(
 		name="feed",
 		outs={2,6},
 		tiks={}  -- signals received
-		--[[
-		tiks={
-			-1,-1,-1, --123
-			-1,-1,-1, --456
-			-1,-1,-1  --789
-		}
-		--]]
 	}
 	local i=g.wd*(y-1)+x
 	g.dat[i]=res
@@ -281,11 +272,11 @@ function tick(
 					outs=dvc.outs
 				end
 			elseif dvc.name=="feed" then
-				if dvc.tiks[2]==_tick-1 then
-					add(outs,2)
-				end
-				if dvc.tiks[6]==_tick-1 then
-					add(outs,6)
+				while #dvc.tiks>0 do
+					local tik=deli(
+						dvc.tiks,#dvc.tiks
+					)
+					add(outs,tik)
 				end
 			end
 		end
@@ -293,7 +284,7 @@ function tick(
 			local ofs=g.dirs[out]
 			local nidx=idx+ofs
 			if nidx!=idx then
-				add(srcs,{idx,nidx})
+				add(srcs,{idx,nidx,out})
 			end
 		end
 	end
@@ -302,6 +293,7 @@ function tick(
 		local src=srcs[1]
 		local lidx=src[1]
 		local idx=src[2]
+		local lout=src[3]
 		if (
 			idx>=1 and
 			idx<=#g.dat and
@@ -311,35 +303,9 @@ function tick(
 			-- update the device
 			local dvc=g.dat[idx]
 			if dvc.name=="nand" then
-				local d=idx-lidx
-				if d==g.wd then
-					add(dvc.tiks,8)
-				elseif d==-g.wd then
-					add(dvc.tiks,2)
-				end
-				--[[
-				if dvc.ltika==_tick then
-					dvc.ltikb=_tick
-				else
-					dvc.ltika=_tick
-				end
-				--]]
-			elseif dvc.name=="feed"then
-				for out in all(dvc.outs) do
-					local of=g.dirs[_opps[out]]
-					local nidx=idx+of
-					if (
-						nidx>=1 and
-						nidx<=#g.dat and
-						nidx!=idx and
-						g.dat[nidx]!=0
-					) then
-						local ndvc=g.dat[nidx]
-						if ndvc.ltik==_tick then
-							dvc.tiks[out]=_tick
-						end
-					end
-				end
+				add(dvc.tiks,lout)
+			elseif dvc.name=="feed" then
+				add(dvc.tiks,lout)
 			else
 				dvc.ltik=_tick
 			end
@@ -349,7 +315,7 @@ function tick(
 					local ofs=g.dirs[out]
 					local nidx=idx+ofs
 					if nidx!=idx then
-						add(srcs,{idx,nidx})
+						add(srcs,{idx,nidx,out})
 					end
 				end
 			end
@@ -417,7 +383,6 @@ function _update()
 				end
 			end
 		end
-		--]]
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
@@ -530,13 +495,7 @@ function _draw()
 			line(sx,sy-1,sx,sy+1,4)
 			pset(sx+1,sy,4)
 			local c=3
-			if (
-				#dvc.tiks==2
-			--[[
-				dvc.ltika==_tick and
-				dvc.ltikb==_tick
-				--]]
-			) then
+			if #dvc.tiks==2 then
 				c=2
 			end
 			for out in all(dvc.outs) do
