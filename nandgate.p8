@@ -89,7 +89,7 @@ function addfeed(
 	)
 	local res={
 		name="feed",
-		outs={2,6},
+		outs={},
 		tiks={}  -- signals received
 	}
 	local i=g.wd*(y-1)+x
@@ -357,6 +357,7 @@ function _update()
 		and add "bridge" connections
 		as necessary
 		--]]
+		--[[
 		for i=1,#_grid.dirs do
 			local ngx=_gx+_dirs[i][1]
 			local ngy=_gy+_dirs[i][2]
@@ -383,6 +384,7 @@ function _update()
 				end
 			end
 		end
+		--]]
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
