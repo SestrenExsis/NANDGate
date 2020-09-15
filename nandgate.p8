@@ -240,6 +240,42 @@ function _init()
 	connect(_grid,5,6,6,6)
 end
 
+function output(
+	d -- device : table
+	)
+	local res={}
+	if d!=0 then
+		local dnm=d.name
+		if dnm=="nand" then
+			local s8=false
+			local s2=false
+			local dtk=d.tiks
+			while #dtk>0 do
+				local tik=deli(dtk,#dtk)
+				if tik==8 then
+					s8=true
+				elseif tik==2 then
+					s2=true
+				end
+			end
+			if not (s2 and s8) then
+				res=d.outs
+			end
+		elseif dnm=="flip" then
+			if d.on then
+				d.ltik=_tick
+				res=d.outs
+			end
+		elseif dnm=="feed" then
+			local dtk=d.tiks
+			while #dtk>0 do
+				add(res,deli(dtk,#dtk))
+			end
+		end
+	end
+	return res
+end
+
 function tick(
 	g -- grid : table
 	)
@@ -248,41 +284,8 @@ function tick(
 	local srcs={}
 	for idx in all(g.dvcs) do
 		local dvc=g.dat[idx]
-		local outs={}
-		if dvc!=0 then
-			if dvc.name=="nand" then
-				local sig8=false
-				local sig2=false
-				while #dvc.tiks>0 do
-					local tik=deli(
-						dvc.tiks,#dvc.tiks
-					)
-					if tik==8 then
-						sig8=true
-					elseif tik==2 then
-						sig2=true
-					end
-				end
-				if not(sig2 and sig8) then
-					outs=dvc.outs
-				end
-			elseif dvc.name=="flip" then
-				if dvc.on then
-					dvc.ltik=_tick
-					outs=dvc.outs
-				end
-			elseif dvc.name=="feed" then
-				while #dvc.tiks>0 do
-					local tik=deli(
-						dvc.tiks,#dvc.tiks
-					)
-					add(outs,tik)
-				end
-			end
-		end
-		for out in all(outs) do
-			local ofs=g.dirs[out]
-			local nidx=idx+ofs
+		for out in all(output(dvc)) do
+			local nidx=idx+g.dirs[out]
 			if nidx!=idx then
 				add(srcs,{idx,nidx,out})
 			end
