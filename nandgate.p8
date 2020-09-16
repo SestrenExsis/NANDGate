@@ -6,8 +6,7 @@ __lua__
 -- github.com/sestrenexsis/nandgate
 
 _me="sestrenexsis"
-_cart="nandgate"
--- "bredbord"?
+_cart="nandgate" -- "bredbord"?
 cartdata(_me.."_".._cart.."_1")
 _version=1
 
@@ -99,6 +98,24 @@ function addfeed(
 	local res={
 		name="feed",
 		outs={},
+		tiks={}  -- signals received
+	}
+	local i=g.wd*(y-1)+x
+	g.dat[i]=res
+	add(g.dvcs,i)
+	return res
+end
+
+function addlamp(
+	g, -- grid       : table
+	x, -- x position : number
+	y  -- y position : number
+	)
+	local msg="addlamp(_grid,"
+	msg=msg..x..","..y..")"
+	printh(msg,_cart)
+	local res={
+		name="lamp",
 		tiks={}  -- signals received
 	}
 	local i=g.wd*(y-1)+x
@@ -253,6 +270,8 @@ function _init()
 	connect(_grid,4,7,5,7)
 	connect(_grid,5,7,5,6)
 	connect(_grid,5,6,6,6)
+	addlamp(_grid,6,2)
+	addlamp(_grid,6,6)
 	printh("-- sr flip flop",_cart)
 	addflip(_grid,1,10)
 	addflip(_grid,1,12)
@@ -297,6 +316,8 @@ function _init()
 	connect(_grid,6,13,5,13)
 	connect(_grid,5,13,4,13)
 	connect(_grid,4,13,4,14)
+	addlamp(_grid,8,11)
+	addlamp(_grid,8,14)
 	printh("-- interactive",_cart)
 end
 
@@ -465,6 +486,10 @@ function _update()
 				_grid.dat[cidx]=0
 				del(_grid.dvcs,cidx)
 				addfeed(_grid,_gx,_gy)
+			elseif dvc.name=="feed" then
+				_grid.dat[cidx]=0
+				del(_grid.dvcs,cidx)
+				addlamp(_grid,_gx,_gy)
 			else
 				_grid.dat[cidx]=0
 				del(_grid.dvcs,cidx)
@@ -599,6 +624,14 @@ function _draw()
 					)
 				end
 			end
+		elseif dvcn=="lamp" then
+			local c=2
+			if dvc.ltik==_tick then
+				c=3
+			end
+			rectfill(
+				sx-1,sy-1,sx+1,sy+1,c
+			)
 		end
 	end
 	-- draw cursor
