@@ -511,6 +511,10 @@ function _draw()
 			end
 		elseif dvcn=="feed" then
 			pset(sx,sy,4)
+			local tk={0,0,0,0,0,0,0,0,0}
+			for out in all(dvc.tiks) do
+				tk[out]=1
+			end
 			for out in all(dvc.outs) do
 				local ofs=_grid.dirs[out]
 				local nidx=idx+ofs
@@ -526,9 +530,7 @@ function _draw()
 					local d=_dirs[out]
 					local dx=d[1]
 					local dy=d[2]
-					if (
-						dvc.tiks[out]==_tick
-					) then
+					if tk[out]==1 then
 						c=3
 					end
 					line(
@@ -545,6 +547,8 @@ function _draw()
 	rect(sx-2,sy-2,sx+2,sy+2,1)
 	-- draw debug info
 	print(#_grid.dvcs,1,120,1)
+	print(stat(0)/2048,96,114,1)
+	print(stat(1),96,120,1)
 	local cidx=(_gy-1)*_grid.wd+_gx
 	local cdvc=_grid.dat[cidx]
 	if (
