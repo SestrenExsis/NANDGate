@@ -54,6 +54,9 @@ function addflip(
 	x, -- x position : number
 	y  -- y position : number
 	)
+	local msg="addflip(_grid,"
+	msg=msg..x..","..y..")"
+	printh(msg,_cart)
 	local res={
 		name="flip",
 		outs={},
@@ -71,6 +74,9 @@ function addnand(
 	x, -- x position : number
 	y  -- y position : number
 	)
+	local msg="addnand(_grid,"
+	msg=msg..x..","..y..")"
+	printh(msg,_cart)
 	local res={
 		name="nand",
 		outs={},
@@ -87,6 +93,9 @@ function addfeed(
 	x, -- x position : number
 	y  -- y position : number
 	)
+	local msg="addfeed(_grid,"
+	msg=msg..x..","..y..")"
+	printh(msg,_cart)
 	local res={
 		name="feed",
 		outs={},
@@ -127,6 +136,10 @@ function connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
+	local msg="connect(_grid,"
+	msg=msg..sx..","..sy..","
+	msg=msg..ex..","..ey..")"
+	printh(msg,_cart)
 	local si=g.wd*(sy-1)+sx
 	local sdy=mid(-1,ey-sy,1)
 	local sdx=mid(-1,ex-sx,1)
@@ -189,6 +202,8 @@ function _init()
 	_gy=1
 	local w=_grid.wd
 	-- add starting devices
+	local msg="-- half adder"
+	printh(msg,_cart,true)
 	addflip(_grid,1,1)
 	addflip(_grid,1,4)
 	addnand(_grid,3,2)
@@ -238,6 +253,51 @@ function _init()
 	connect(_grid,4,7,5,7)
 	connect(_grid,5,7,5,6)
 	connect(_grid,5,6,6,6)
+	printh("-- sr flip flop",_cart)
+	addflip(_grid,1,10)
+	addflip(_grid,1,12)
+	addflip(_grid,1,14)
+	addnand(_grid,2,11)
+	addnand(_grid,2,13)
+	addnand(_grid,4,11)
+	addnand(_grid,4,14)
+	addfeed(_grid,6,13)
+	connect(_grid,1,10,2,10)
+	connect(_grid,2,10,2,11)
+	connect(_grid,1,12,2,12)
+	connect(_grid,2,12,2,11)
+	connect(_grid,2,12,2,13)
+	connect(_grid,1,14,2,14)
+	connect(_grid,2,14,2,13)
+	connect(_grid,2,13,3,13)
+	connect(_grid,3,13,3,14)
+	connect(_grid,3,14,3,15)
+	connect(_grid,3,15,4,15)
+	connect(_grid,4,15,4,14)
+	connect(_grid,4,14,5,14)
+	connect(_grid,5,14,6,14)
+	connect(_grid,6,14,7,14)
+	connect(_grid,7,14,8,14)
+	connect(_grid,6,14,6,13)
+	connect(_grid,6,13,6,12)
+	connect(_grid,6,12,5,12)
+	connect(_grid,5,12,4,12)
+	connect(_grid,4,12,4,11)
+	connect(_grid,2,11,3,11)
+	connect(_grid,3,11,3,10)
+	connect(_grid,3,10,4,10)
+	connect(_grid,4,10,4,11)
+	connect(_grid,4,11,5,11)
+	connect(_grid,5,11,6,11)
+	connect(_grid,6,11,7,11)
+	connect(_grid,7,11,8,11)
+	connect(_grid,7,11,7,12)
+	connect(_grid,7,12,7,13)
+	connect(_grid,7,13,6,13)
+	connect(_grid,6,13,5,13)
+	connect(_grid,5,13,4,13)
+	connect(_grid,4,13,4,14)
+	printh("-- interactive",_cart)
 end
 
 function output(
