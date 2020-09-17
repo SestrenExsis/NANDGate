@@ -22,6 +22,15 @@ _dirs={ -- {x,y}
 	}
 _opps={9,8,7,6,5,4,3,2,1}
 
+_llog=""
+
+function log(l)
+	if l!=_llog then
+		printh(l,_cart)
+	end
+	_llog=l
+end
+
 function newgrid(
 	w, -- width      : number
 	h, -- height     : number
@@ -53,9 +62,9 @@ function addflip(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local msg="addflip(_grid,"
-	msg=msg..x..","..y..")"
-	printh(msg,_cart)
+	local l="addflip(_grid,"
+	l=l..x..","..y..")"
+	log(l)
 	local res={
 		name="flip",
 		outs={},
@@ -73,9 +82,9 @@ function addnand(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local msg="addnand(_grid,"
-	msg=msg..x..","..y..")"
-	printh(msg,_cart)
+	local l="addnand(_grid,"
+	l=l..x..","..y..")"
+	log(l)
 	local res={
 		name="nand",
 		outs={},
@@ -92,9 +101,9 @@ function addfeed(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local msg="addfeed(_grid,"
-	msg=msg..x..","..y..")"
-	printh(msg,_cart)
+	local l="addfeed(_grid,"
+	l=l..x..","..y..")"
+	log(l)
 	local res={
 		name="feed",
 		outs={},
@@ -111,9 +120,9 @@ function addlamp(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local msg="addlamp(_grid,"
-	msg=msg..x..","..y..")"
-	printh(msg,_cart)
+	local l="addlamp(_grid,"
+	l=l..x..","..y..")"
+	log(l)
 	local res={
 		name="lamp",
 		tiks={}  -- signals received
@@ -153,10 +162,10 @@ function connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
-	local msg="connect(_grid,"
-	msg=msg..sx..","..sy..","
-	msg=msg..ex..","..ey..")"
-	printh(msg,_cart)
+	local l="connect(_grid,"
+	l=l..sx..","..sy..","
+	l=l..ex..","..ey..")"
+	log(l)
 	local si=g.wd*(sy-1)+sx
 	local sdy=mid(-1,ey-sy,1)
 	local sdx=mid(-1,ex-sx,1)
@@ -192,6 +201,7 @@ function connect(
 	if (
 		g.dat[ei]!=0 and
 		g.dat[ei].name=="wire" and
+		g.dat[si].name=="wire" and
 		(edx!=0 or edy!=0)
 	) then
 		--addifnew(g.dat[ei].outs,eo)
