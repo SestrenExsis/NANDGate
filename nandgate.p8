@@ -200,19 +200,22 @@ end
 -->8
 -- game loops
 
+function nextpal()
+	if _pal==nil then
+		_pal=0
+	end
+	_pal+=1
+	if _pal>#_pals then
+		_pal=1
+	end
+	for i=0,#_pals[_pal] do
+		pal(i,_pals[_pal][i],1)
+	end
+end
+
 function _init()
 	-- common vars
 	_tick=0
-	-- alter color palette
-	_pals={
-		{[0]=   1, 13,  2, 14,  7},
-		{[0]=   0,  5,  3, 11,  7},
-		{[0]= 129,131,  3, 11,138}
-		}
-		_pal=_pals[1]
-	for i=0,#_pal do
-		pal(i,_pal[i],1)
-	end
 	-- grid
 	_grid=newgrid(32,32,12,12)
 	_gx=1
@@ -319,6 +322,17 @@ function _init()
 	addlamp(_grid,8,11)
 	addlamp(_grid,8,14)
 	printh("-- interactive",_cart)
+	-- alter color palette
+	_pals={
+		{[0]=   1, 13,  2, 14,  7},
+		{[0]=   0,  5,  3, 11,  7},
+		{[0]= 129,131,  3, 11,138},
+		{[0]= 128,133,134,143,15}
+		}
+	nextpal()
+	menuitem(
+		1,"next palette",nextpal
+	)
 end
 
 function output(
