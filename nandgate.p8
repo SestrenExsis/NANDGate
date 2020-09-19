@@ -22,8 +22,8 @@ _dirs={ -- {x,y}
 	}
 _opps={9,8,7,6,5,4,3,2,1}
 _ortho={2,4,6,8}
-
 _llog=""
+_clk=16
 
 function log(l)
 	if l!=_llog then
@@ -537,6 +537,10 @@ function _update()
 	end
 	if btnp(⬆️,1) then
 		tick(_grid)
+	elseif btnp(➡️,1) then
+		for i=1,_clk do
+			tick(_grid)
+		end
 	end
 end
 
