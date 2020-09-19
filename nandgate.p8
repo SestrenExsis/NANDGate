@@ -21,6 +21,7 @@ _dirs={ -- {x,y}
 	{-1,-1},{ 0,-1},{ 1,-1}  --789
 	}
 _opps={9,8,7,6,5,4,3,2,1}
+_ortho={2,4,6,8}
 
 _llog=""
 
@@ -418,11 +419,25 @@ function tick(
 				dvc.ltik=_tick
 			end
 			-- only traverse wires
+			-- or lamp-to-lamp
 			if dvc.name=="wire" then
 				for out in all(dvc.outs) do
 					local ofs=g.dirs[out]
 					local nidx=idx+ofs
 					if nidx!=idx then
+						add(srcs,{idx,nidx,out})
+					end
+				end
+			elseif dvc.name=="lamp" then
+				for out in all(_ortho) do
+					local ofs=g.dirs[out]
+					local nidx=idx+ofs
+					local ndvc=g.dat[nidx]
+					if (
+						nidx!=idx and
+						ndvc!=0 and
+						ndvc.name=="lamp"
+					) then
 						add(srcs,{idx,nidx,out})
 					end
 				end
