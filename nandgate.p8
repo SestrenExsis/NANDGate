@@ -224,6 +224,52 @@ function nextpal()
 	end
 end
 
+function _setx(aa)
+	_gx=aa
+end
+
+function _sety(aa)
+	_gy=aa
+end
+
+function _make(a)
+	local g=_grid
+	if a==0 then
+		printh("todo: make(0)")
+	elseif a==1 then
+		connect(g,_gx,_gy,_gx,_gy)
+	elseif a==2 then
+		addflip(g,_gx,_gy)
+	elseif a==3 then
+		addnand(g,_gx,_gy)
+	elseif a==4 then
+		addfeed(g,_gx,_gy)
+	elseif a==5 then
+		addlamp(g,_gx,_gy)
+	end
+end
+
+function _fuse(a)
+	local g=_grid
+	local d=_dirs[a]
+	local dx=d[1]
+	local dy=d[2]
+	connect(g,
+		_gx,_gy,
+		_gx+dx,_gy+dy
+	)
+	_gx+=dx
+	_gy+=dy
+end
+
+function _move(a,b)
+	local d=_dirs[a]
+	local dx=d[1]
+	local dy=d[2]
+	_gx+=b*dx
+	_gy+=b*dy
+end
+
 function _init()
 	-- common vars
 	_tick=0
@@ -231,11 +277,23 @@ function _init()
 	_grid=newgrid(32,32,12,12)
 	_gx=1
 	_gy=1
-	local w=_grid.wd
 	-- add starting devices
 	local msg="-- half adder"
 	printh(msg,_cart,true)
-	addflip(_grid,1,1)
+	_setx(1)
+	_sety(1)
+	_move(2,1)
+	_make(2) -- flip
+	_fuse(6)
+	--_save()
+	_fuse(8)
+	_fuse(6)
+	_fuse(2)
+	_make(3) -- nand
+	_fuse(6)
+	--_load()
+	--[[
+	--addflip(_grid,1,1)
 	addflip(_grid,1,4)
 	addnand(_grid,3,2)
 	addnand(_grid,5,2)
@@ -286,6 +344,7 @@ function _init()
 	connect(_grid,5,6,6,6)
 	addlamp(_grid,6,2)
 	addlamp(_grid,6,6)
+	--]]
 	printh("-- sr flip flop",_cart)
 	addflip(_grid,1,10)
 	addflip(_grid,1,12)
