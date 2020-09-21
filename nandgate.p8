@@ -232,10 +232,24 @@ function _sety(aa)
 	_gy=aa
 end
 
+function _push()
+	add(_stk,_gx)
+	add(_stk,_gy)
+end
+
+function _pull()
+	if #_stk>1 then
+		_gy=deli(_stk,#_stk)
+		_gx=deli(_stk,#_stk)
+	end
+end
+
 function _make(a)
 	local g=_grid
 	if a==0 then
-		printh("todo: make(0)")
+		local idx=(_gy-1)*g.wd+_gx
+		g.dat[idx]=0
+		del(g.dvcs,idx)
 	elseif a==1 then
 		connect(g,_gx,_gy,_gx,_gy)
 	elseif a==2 then
@@ -270,6 +284,77 @@ function _move(a,b)
 	_gy+=b*dy
 end
 
+function makehalfadder()
+	local msg="-- half adder"
+	printh(msg,_cart,true)
+	_move(2,1)
+	_make(2) -- flip
+	_fuse(6)
+	_push()
+	_fuse(8)
+	_fuse(6)
+	_fuse(2)
+	_make(3) -- nand
+	_fuse(6)
+	_push()
+	_fuse(8)
+	_fuse(6)
+	_fuse(2)
+	_make(3) -- nand
+	_fuse(6)
+	_make(5) -- lamp
+	_pull()
+	_fuse(2)
+	_fuse(6)
+	_fuse(8)
+	_pull()
+	_fuse(2)
+	_fuse(2)
+	_fuse(2)
+	_make(4) -- feed
+	_push()
+	_fuse(2)
+	_fuse(2)
+	_fuse(2)
+	_fuse(6)
+	_push()
+	_fuse(6)
+	_fuse(8)
+	_make(3) -- nand
+	_pull()
+	_fuse(8)
+	_fuse(8)
+	_make(3) -- nand
+	_pull()
+	_move(4,1)
+	_make(2) -- flip
+	_fuse(6)
+	_fuse(6)
+	_push()
+	_fuse(8)
+	_push()
+	_fuse(8)
+	_fuse(8)
+	_pull()
+	_fuse(6)
+	_fuse(2)
+	_make(3) -- nand
+	_fuse(6)
+	_fuse(2)
+	_make(3) -- nand
+	_fuse(6)
+	_make(5) -- lamp
+	_pull()
+	_fuse(2)
+	_fuse(6)
+	_push()
+	_fuse(8)
+	_pull()
+	_fuse(2)
+	_fuse(6)
+	_fuse(8)
+end
+
 function _init()
 	-- common vars
 	_tick=0
@@ -277,74 +362,14 @@ function _init()
 	_grid=newgrid(32,32,12,12)
 	_gx=1
 	_gy=1
+	_stk={}
 	-- add starting devices
-	local msg="-- half adder"
-	printh(msg,_cart,true)
 	_setx(1)
 	_sety(1)
-	_move(2,1)
-	_make(2) -- flip
-	_fuse(6)
-	--_save()
-	_fuse(8)
-	_fuse(6)
-	_fuse(2)
-	_make(3) -- nand
-	_fuse(6)
-	--_load()
-	--[[
-	--addflip(_grid,1,1)
-	addflip(_grid,1,4)
-	addnand(_grid,3,2)
-	addnand(_grid,5,2)
-	addnand(_grid,4,5)
-	addnand(_grid,3,6)
-	addnand(_grid,5,6)
-	addnand(_grid,4,7)
-	addfeed(_grid,2,4)
-	connect(_grid,1,1,2,1)
-	connect(_grid,2,1,3,1)
-	connect(_grid,3,1,3,2)
-	connect(_grid,2,1,2,2)
-	connect(_grid,2,2,2,3)
-	connect(_grid,2,3,2,4)
-	connect(_grid,2,4,2,5)
-	connect(_grid,2,5,2,6)
-	connect(_grid,2,6,2,7)
-	connect(_grid,2,7,2,8)
-	connect(_grid,2,8,3,8)
-	connect(_grid,3,8,3,7)
-	connect(_grid,3,7,3,6)
-	connect(_grid,3,8,4,8)
-	connect(_grid,4,8,4,7)
-	connect(_grid,1,4,2,4)
-	connect(_grid,2,4,3,4)
-	connect(_grid,3,4,4,4)
-	connect(_grid,4,4,4,5)
-	connect(_grid,3,4,3,3)
-	connect(_grid,3,3,3,2)
-	connect(_grid,3,4,3,5)
-	connect(_grid,3,5,3,6)
-	connect(_grid,3,2,4,2)
-	connect(_grid,4,2,4,1)
-	connect(_grid,4,1,5,1)
-	connect(_grid,5,1,5,2)
-	connect(_grid,4,2,4,3)
-	connect(_grid,4,3,5,3)
-	connect(_grid,5,3,5,2)
-	connect(_grid,5,2,6,2)
-	connect(_grid,4,5,5,5) -- !!!
-	connect(_grid,5,5,5,6)
-	connect(_grid,4,6,4,5)
-	connect(_grid,3,6,4,6) -- !!!
-	connect(_grid,4,6,4,7)
-	connect(_grid,5,5,5,6)
-	connect(_grid,4,7,5,7)
-	connect(_grid,5,7,5,6)
-	connect(_grid,5,6,6,6)
-	addlamp(_grid,6,2)
-	addlamp(_grid,6,6)
-	--]]
+	makehalfadder()
+	_setx(16)
+	_sety(1)
+	makehalfadder()
 	printh("-- sr flip flop",_cart)
 	addflip(_grid,1,10)
 	addflip(_grid,1,12)
