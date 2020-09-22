@@ -88,7 +88,7 @@ function addnand(
 	log(l)
 	local res={
 		name="nand",
-		outs={},
+		outs={6},
 		tiks={}  -- signals received
 	}
 	local i=g.wd*(y-1)+x
@@ -206,21 +206,6 @@ function connect(
 		(edx!=0 or edy!=0)
 	) then
 		--addifnew(g.dat[ei].outs,eo)
-	end
-end
--->8
--- game loops
-
-function nextpal()
-	if _pal==nil then
-		_pal=0
-	end
-	_pal+=1
-	if _pal>#_pals then
-		_pal=1
-	end
-	for i=0,#_pals[_pal] do
-		pal(i,_pals[_pal][i],1)
 	end
 end
 
@@ -420,6 +405,21 @@ function makesrflipflop(x,y)
 	_fuse(4)
 	_fuse(8)
 end
+-->8
+-- game loops
+
+function nextpal()
+	if _pal==nil then
+		_pal=0
+	end
+	_pal+=1
+	if _pal>#_pals then
+		_pal=1
+	end
+	for i=0,#_pals[_pal] do
+		pal(i,_pals[_pal][i],1)
+	end
+end
 
 function _init()
 	-- common vars
@@ -454,18 +454,15 @@ function output(
 	if d!=0 then
 		local dnm=d.name
 		if dnm=="nand" then
+			local pulses=0
 			local s8=false
 			local s2=false
 			local dtk=d.tiks
 			while #dtk>0 do
 				local tik=deli(dtk,#dtk)
-				if tik==8 then
-					s8=true
-				elseif tik==2 then
-					s2=true
-				end
+				pulses+=1
 			end
-			if not (s2 and s8) then
+			if pulses<2 then
 				res=d.outs
 			end
 		elseif dnm=="flip" then
@@ -726,7 +723,7 @@ function _draw()
 			end
 			pset(sx,sy,c)
 		elseif dvcn=="nand" then
-			line(sx,sy-1,sx,sy+1,4)
+			rectfill(sx-1,sy-1,sx,sy+1,4)
 			pset(sx+1,sy,4)
 			local c=3
 			if #dvc.tiks==2 then
