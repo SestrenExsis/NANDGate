@@ -265,13 +265,13 @@ function _move(a,b)
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
-	_gx+=b*dx
-	_gy+=b*dy
+	_gx=mid(1,_gx+b*dx,_grid.wd)
+	_gy=mid(1,_gy+b*dy,_grid.ht)
 end
 
 function makehalfadder(x,y)
 	local msg="-- half adder"
-	printh(msg,_cart,true)
+	printh(msg,_cart)
 	_setx(x)
 	_sety(y)
 	_move(2,1)
@@ -348,7 +348,7 @@ end
 
 function makesrflipflop(x,y)
 	local msg="-- sr flip flop"
-	printh(msg,_cart,true)
+	printh(msg,_cart)
 	_setx(x)
 	_sety(y)
 	_push()
@@ -425,6 +425,7 @@ function _init()
 	-- common vars
 	_tick=0
 	-- grid
+	printh("",_cart,true)
 	_grid=newgrid(32,32,12,12)
 	_gx=1
 	_gy=1
@@ -445,6 +446,23 @@ function _init()
 	menuitem(
 		1,"next palette",nextpal
 	)
+end
+
+function idxof(x,y)
+	local res=(y-1)*_grid.wd+x
+	return res
+end
+
+function xof(idx)
+	local res=(idx-1)%_grid.wd+1
+	return res
+end
+
+function yof(idx)
+	local res=flr(
+		(idx-1)/_grid.wd
+	)+1
+	return res
 end
 
 function device(
@@ -565,17 +583,17 @@ function _update()
 	local lgx=_gx
 	local lgy=_gy
 	if btnp(⬅️) then
-		_gx=max(1,_gx-1)
+		_move(4,1)
 	elseif btnp(➡️) then
-		_gx=min(_grid.wd,_gx+1)
+		_move(6,1)
 	end
 	if btnp(⬆️) then
-		_gy=max(1,_gy-1)
+		_move(8,1)
 	elseif btnp(⬇️) then
-		_gy=min(_grid.ht,_gy+1)
+		_move(2,1)
 	end
-	local lidx=(lgy-1)*_grid.wd+lgx
-	local cidx=(_gy-1)*_grid.wd+_gx
+	local lidx=idxof(lgx,lgy)
+	local cidx=idxof(_gx,_gy)
 	local cdvc=device(_grid,cidx)
 	if (
 		btnp(❎) and
@@ -648,10 +666,8 @@ function _draw()
 	-- draw wires
 	local todo={}
 	for idx in all(_grid.dvcs) do
-		local gx=(idx-1)%_grid.wd+1
-		local gy=flr(
-			(idx-1)/_grid.wd
-		)+1
+		local gx=xof(idx)
+		local gy=yof(idx)
 		local sx=gx*3+_grid.sx
 		local sy=gy*3+_grid.sy
 		local dvc=_grid.dat[idx]
@@ -675,10 +691,8 @@ function _draw()
 	end
 	-- draw other devices
 	for idx in all(todo) do
-		local gx=(idx-1)%_grid.wd+1
-		local gy=flr(
-			(idx-1)/_grid.wd
-		)+1
+		local gx=xof(idx)
+		local gy=yof(idx)
 		local sx=gx*3+_grid.sx
 		local sy=gy*3+_grid.sy
 		local dvc=_grid.dat[idx]
@@ -757,7 +771,7 @@ function _draw()
 	print(#_grid.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
 	print(stat(1),96,120,1)
-	local cidx=(_gy-1)*_grid.wd+_gx
+	local cidx=idxof(_gx,_gy)
 	local cdvc=_grid.dat[cidx]
 	if (
 		cdvc!=0 and
