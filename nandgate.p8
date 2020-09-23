@@ -447,6 +447,25 @@ function _init()
 	)
 end
 
+function device(
+	g, -- grid         : table
+	i, -- device index : number
+	d  -- direction    : number
+	)
+	local res=nil
+	if d==nil then
+		d=5
+	end
+	local j=i+g.dirs[d]
+	if j>=1 and j<=#g.dat then
+		local dvc=g.dat[j]
+		if dvc!=nil and dvc!=0 then
+			res=dvc
+		end
+	end
+	return res
+end
+
 function output(
 	d -- device : table
 	)
@@ -501,14 +520,12 @@ function tick(
 		local lidx=src[1]
 		local idx=src[2]
 		local lout=src[3]
+		local dvc=device(g,idx)
 		if (
-			idx>=1 and
-			idx<=#g.dat and
-			g.dat[idx]!=0 and
-			g.dat[idx].ltik!=_tick
+			dvc!=nil and
+			dvc.ltik!=_tick
 		) then
 			-- update the device
-			local dvc=g.dat[idx]
 			if dvc.name=="nand" then
 				add(dvc.tiks,lout)
 			elseif dvc.name=="feed" then
@@ -520,16 +537,14 @@ function tick(
 			-- or lamp-to-lamp
 			if dvc.name=="wire" then
 				for out in all(dvc.outs) do
-					local ofs=g.dirs[out]
-					local nidx=idx+ofs
+					local nidx=idx+g.dirs[out]
 					if nidx!=idx then
 						add(srcs,{idx,nidx,out})
 					end
 				end
 			elseif dvc.name=="lamp" then
 				for out in all(_ortho) do
-					local ofs=g.dirs[out]
-					local nidx=idx+ofs
+					local nidx=idx+g.dirs[out]
 					local ndvc=g.dat[nidx]
 					if (
 						nidx!=idx and
@@ -561,51 +576,16 @@ function _update()
 	end
 	local lidx=(lgy-1)*_grid.wd+lgx
 	local cidx=(_gy-1)*_grid.wd+_gx
-	local cdvc=_grid.dat[cidx]
+	local cdvc=device(_grid,cidx)
 	if (
 		btnp(❎) and
-		cdvc!=0 and
+		cdvc!=nil and
 		cdvc.name=="flip"
 	) then
 		-- toggle the flip
 		cdvc.on=not cdvc.on
 	elseif btn(❎) then
 		connect(_grid,lgx,lgy,_gx,_gy)
-		--[[
-		connect 2 cells with wire,
-		then search neighbors for 
-		wires connecting to this cell
-		and add "bridge" connections
-		as necessary
-		--]]
-		--[[
-		for i=1,#_grid.dirs do
-			local ngx=_gx+_dirs[i][1]
-			local ngy=_gy+_dirs[i][2]
-			local nidx=cidx+_grid.dirs[i]
-			local ndvc=_grid.dat[nidx]
-			if (
-				ndvc!=0 and
-				nidx>=1 and
-				nidx<=#_grid.dat and
-				nidx!=cidx
-			) then
-				for out in all(ndvc.outs) do
-					if _opps[out]==i then
-						if (
-							ndvc.name=="wire" or
-							out==4
-						) then
-							connect(
-								_grid,_gx,_gy,ngx,ngy
-							)
-						end
-						break
-					end
-				end
-			end
-		end
-		--]]
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
@@ -651,7 +631,7 @@ function _draw()
 		print(tostr(i),sx+1,sy+1,1)
 		print(tostr(i),sx,sy,4)
 		rect(sx+5,sy+1,sx+9,sy+5,1)
-		rect(sx+4, sy,sx+8,sy+4,4)
+		rect(sx+4,sy,sx+8,sy+4,4)
 		rectfill(
 			sx+5,sy+1,
 			sx+7,sy+3,
@@ -742,16 +722,10 @@ function _draw()
 				tk[out]=1
 			end
 			for out in all(dvc.outs) do
-				local ofs=_grid.dirs[out]
-				local nidx=idx+ofs
-				local ndvc=_grid.dat[nidx]
-				if (
-					nidx!=idx and
-					ndvc!=nil and
-					ndvc!=0 and
-					nidx>=1 and
-					nidx<=#_grid.dat
-				) then
+				local ndvc=device(
+					_grid,idx,out
+				)
+				if ndvc!=nil and out!=5 then
 					local c=2
 					local d=_dirs[out]
 					local dx=d[1]
