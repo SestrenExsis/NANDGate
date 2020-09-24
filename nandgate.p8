@@ -32,17 +32,19 @@ function log(l)
 	_llog=l
 end
 
-function newgrid(
+grid={}
+
+function grid:new(
 	w, -- width      : number
-	h, -- height     : number
-	x, -- x position : number
-	y  -- y position : number
+	h  -- height     : number
 	)
-	local res={
+	local obj={
 		wd=w,
 		ht=h,
-		sx=x,
-		sy=y,
+		sx=12,
+		sy=12,
+		x=flr(0.5*w),
+		y=flr(0.5*h),
 		dat={},
 		dvcs={},
 		dirs={
@@ -52,10 +54,11 @@ function newgrid(
 		}
 	}
 	for i=1,w*h do
-		add(res.dat,0)
+		add(obj.dat,0)
 	end
-	assert(#res.dat==w*h)
-	return res
+	return setmetatable(
+		obj,{__index=self}
+	)
 end
 
 function addflip(
@@ -63,7 +66,7 @@ function addflip(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local l="addflip(_grid,"
+	local l="addflip(_g,"
 	l=l..x..","..y..")"
 	log(l)
 	local res={
@@ -83,7 +86,7 @@ function addnand(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local l="addnand(_grid,"
+	local l="addnand(_g,"
 	l=l..x..","..y..")"
 	log(l)
 	local res={
@@ -102,7 +105,7 @@ function addfeed(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local l="addfeed(_grid,"
+	local l="addfeed(_g,"
 	l=l..x..","..y..")"
 	log(l)
 	local res={
@@ -121,7 +124,7 @@ function addlamp(
 	x, -- x position : number
 	y  -- y position : number
 	)
-	local l="addlamp(_grid,"
+	local l="addlamp(_g,"
 	l=l..x..","..y..")"
 	log(l)
 	local res={
@@ -163,7 +166,7 @@ function connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
-	local l="connect(_grid,"
+	local l="connect(_g,"
 	l=l..sx..","..sy..","
 	l=l..ex..","..ey..")"
 	log(l)
@@ -210,63 +213,63 @@ function connect(
 end
 
 function _setx(aa)
-	_gx=aa
+	_g.x=aa
 end
 
 function _sety(aa)
-	_gy=aa
+	_g.y=aa
 end
 
 function _push()
-	add(_stk,_gx)
-	add(_stk,_gy)
+	add(_stk,_g.x)
+	add(_stk,_g.y)
 end
 
 function _pull()
 	if #_stk>1 then
-		_gy=deli(_stk,#_stk)
-		_gx=deli(_stk,#_stk)
+		_g.y=deli(_stk,#_stk)
+		_g.x=deli(_stk,#_stk)
 	end
 end
 
 function _make(a)
-	local g=_grid
+	local g=_g
 	if a==0 then
-		local idx=(_gy-1)*g.wd+_gx
+		local idx=(_g.y-1)*g.wd+_g.x
 		g.dat[idx]=0
 		del(g.dvcs,idx)
 	elseif a==1 then
-		connect(g,_gx,_gy,_gx,_gy)
+		connect(g,_g.x,_g.y,_g.x,_g.y)
 	elseif a==2 then
-		addflip(g,_gx,_gy)
+		addflip(g,_g.x,_g.y)
 	elseif a==3 then
-		addnand(g,_gx,_gy)
+		addnand(g,_g.x,_g.y)
 	elseif a==4 then
-		addfeed(g,_gx,_gy)
+		addfeed(g,_g.x,_g.y)
 	elseif a==5 then
-		addlamp(g,_gx,_gy)
+		addlamp(g,_g.x,_g.y)
 	end
 end
 
 function _fuse(a)
-	local g=_grid
+	local g=_g
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
 	connect(g,
-		_gx,_gy,
-		_gx+dx,_gy+dy
+		_g.x,_g.y,
+		_g.x+dx,_g.y+dy
 	)
-	_gx+=dx
-	_gy+=dy
+	_g.x+=dx
+	_g.y+=dy
 end
 
 function _move(a,b)
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
-	_gx=mid(1,_gx+b*dx,_grid.wd)
-	_gy=mid(1,_gy+b*dy,_grid.ht)
+	_g.x=mid(1,_g.x+b*dx,_g.wd)
+	_g.y=mid(1,_g.y+b*dy,_g.ht)
 end
 
 function makehalfadder(x,y)
@@ -426,9 +429,7 @@ function _init()
 	_tick=0
 	-- grid
 	printh("",_cart,true)
-	_grid=newgrid(32,32,12,12)
-	_gx=1
-	_gy=1
+	_g=grid:new(32,32)
 	_stk={}
 	-- add starting devices
 	makehalfadder(1,1)
@@ -449,18 +450,18 @@ function _init()
 end
 
 function idxof(x,y)
-	local res=(y-1)*_grid.wd+x
+	local res=(y-1)*_g.wd+_g.x
 	return res
 end
 
 function xof(idx)
-	local res=(idx-1)%_grid.wd+1
+	local res=(idx-1)%_g.wd+1
 	return res
 end
 
 function yof(idx)
 	local res=flr(
-		(idx-1)/_grid.wd
+		(idx-1)/_g.wd
 	)+1
 	return res
 end
@@ -580,8 +581,8 @@ end
 
 function _update()
 	-- input
-	local lgx=_gx
-	local lgy=_gy
+	local lgx=_g.x
+	local lgy=_g.y
 	if btnp(⬅️) then
 		_move(4,1)
 	elseif btnp(➡️) then
@@ -593,8 +594,8 @@ function _update()
 		_move(2,1)
 	end
 	local lidx=idxof(lgx,lgy)
-	local cidx=idxof(_gx,_gy)
-	local cdvc=device(_grid,cidx)
+	local cidx=idxof(_g.x,_g.y)
+	local cdvc=device(_g,cidx)
 	if (
 		btnp(❎) and
 		cdvc!=nil and
@@ -603,39 +604,39 @@ function _update()
 		-- toggle the flip
 		cdvc.on=not cdvc.on
 	elseif btn(❎) then
-		connect(_grid,lgx,lgy,_gx,_gy)
+		connect(_g,lgx,lgy,_g.x,_g.y)
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
 	) then
 		-- cycle through devices
-		if _grid.dat[cidx]==0 then
-			addflip(_grid,_gx,_gy)
+		if _g.dat[cidx]==0 then
+			addflip(_g,_g.x,_g.y)
 		else
-			local dvc=_grid.dat[cidx]
+			local dvc=_g.dat[cidx]
 			if dvc.name=="flip" then
-				_grid.dat[cidx]=0
-				del(_grid.dvcs,cidx)
-				addnand(_grid,_gx,_gy)
+				_g.dat[cidx]=0
+				del(_g.dvcs,cidx)
+				addnand(_g,_g.x,_g.y)
 			elseif dvc.name=="nand" then
-				_grid.dat[cidx]=0
-				del(_grid.dvcs,cidx)
-				addfeed(_grid,_gx,_gy)
+				_g.dat[cidx]=0
+				del(_g.dvcs,cidx)
+				addfeed(_g,_g.x,_g.y)
 			elseif dvc.name=="feed" then
-				_grid.dat[cidx]=0
-				del(_grid.dvcs,cidx)
-				addlamp(_grid,_gx,_gy)
+				_g.dat[cidx]=0
+				del(_g.dvcs,cidx)
+				addlamp(_g,_g.x,_g.y)
 			else
-				_grid.dat[cidx]=0
-				del(_grid.dvcs,cidx)
+				_g.dat[cidx]=0
+				del(_g.dvcs,cidx)
 			end
 		end
 	end
 	if btnp(⬆️,1) then
-		tick(_grid)
+		tick(_g)
 	elseif btnp(➡️,1) then
 		for i=1,_clk do
-			tick(_grid)
+			tick(_g)
 		end
 	end
 end
@@ -651,26 +652,25 @@ function _draw()
 		rect(sx+5,sy+1,sx+9,sy+5,1)
 		rect(sx+4,sy,sx+8,sy+4,4)
 		rectfill(
-			sx+5,sy+1,
-			sx+7,sy+3,
-			i)
+			sx+5,sy+1,sx+7,sy+3,i
+		)
 	end
 	-- draw grid
-	for gy=1,_grid.ht do
-		for gx=1,_grid.wd do
-			local sx=gx*3+_grid.sx
-			local sy=gy*3+_grid.sy
+	for gy=1,_g.ht do
+		for gx=1,_g.wd do
+			local sx=gx*3+_g.sx
+			local sy=gy*3+_g.sy
 			pset(sx,sy,1)
 		end
 	end
 	-- draw wires
 	local todo={}
-	for idx in all(_grid.dvcs) do
+	for idx in all(_g.dvcs) do
 		local gx=xof(idx)
 		local gy=yof(idx)
-		local sx=gx*3+_grid.sx
-		local sy=gy*3+_grid.sy
-		local dvc=_grid.dat[idx]
+		local sx=gx*3+_g.sx
+		local sy=gy*3+_g.sy
+		local dvc=_g.dat[idx]
 		local dvcn=dvc.name
 		if dvcn=="wire" then
 			local c=2
@@ -693,9 +693,9 @@ function _draw()
 	for idx in all(todo) do
 		local gx=xof(idx)
 		local gy=yof(idx)
-		local sx=gx*3+_grid.sx
-		local sy=gy*3+_grid.sy
-		local dvc=_grid.dat[idx]
+		local sx=gx*3+_g.sx
+		local sy=gy*3+_g.sy
+		local dvc=_g.dat[idx]
 		local dvcn=dvc.name
 		if dvcn=="flip" then
 			rect(sx-1,sy-1,sx+1,sy+1,4)
@@ -737,7 +737,7 @@ function _draw()
 			end
 			for out in all(dvc.outs) do
 				local ndvc=device(
-					_grid,idx,out
+					_g,idx,out
 				)
 				if ndvc!=nil and out!=5 then
 					local c=2
@@ -764,21 +764,21 @@ function _draw()
 		end
 	end
 	-- draw cursor
-	local sx=_gx*3+_grid.sx
-	local sy=_gy*3+_grid.sy
+	local sx=_g.x*3+_g.sx
+	local sy=_g.y*3+_g.sy
 	rect(sx-2,sy-2,sx+2,sy+2,1)
 	-- draw debug info
-	print(#_grid.dvcs,1,120,1)
+	print(#_g.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
 	print(stat(1),96,120,1)
-	local cidx=idxof(_gx,_gy)
-	local cdvc=_grid.dat[cidx]
+	local cidx=idxof(_g.x,_g.y)
+	local cdvc=_g.dat[cidx]
 	if (
 		cdvc!=0 and
 		cdvc.outs!=nil
 	) then
-		local sx=_gx*3+_grid.sx
-		local sy=_gy*3+_grid.sy
+		local sx=_g.x*3+_g.sx
+		local sy=_g.y*3+_g.sy
 		for out in all(cdvc.outs) do
 			local d=_dirs[out]
 			local dx=d[1]
