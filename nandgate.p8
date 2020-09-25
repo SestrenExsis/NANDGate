@@ -61,79 +61,63 @@ function grid:new(
 	)
 end
 
-function addflip(
-	g, -- grid       : table
-	x, -- x position : number
-	y  -- y position : number
-	)
-	local l="addflip(_g,"
-	l=l..x..","..y..")"
-	log(l)
+function grid:addflip()
+	log("addflip()")
 	local res={
 		name="flip",
 		outs={},
 		ltik=-1, -- last powered tick
 		on=true
 	}
-	local i=g.wd*(y-1)+x
-	g.dat[i]=res
-	add(g.dvcs,i)
+	local x=self.x
+	local y=self.y
+	local i=self.wd*(y-1)+x
+	self.dat[i]=res
+	add(self.dvcs,i)
 	return res
 end
 
-function addnand(
-	g, -- grid       : table
-	x, -- x position : number
-	y  -- y position : number
-	)
-	local l="addnand(_g,"
-	l=l..x..","..y..")"
-	log(l)
+function grid:addnand()
+	log("addnand()")
 	local res={
 		name="nand",
 		outs={6},
 		tiks={}  -- signals received
 	}
-	local i=g.wd*(y-1)+x
-	g.dat[i]=res
-	add(g.dvcs,i)
+	local x=self.x
+	local y=self.y
+	local i=self.wd*(y-1)+x
+	self.dat[i]=res
+	add(self.dvcs,i)
 	return res
 end
 
-function addfeed(
-	g, -- grid       : table
-	x, -- x position : number
-	y  -- y position : number
-	)
-	local l="addfeed(_g,"
-	l=l..x..","..y..")"
-	log(l)
+function grid:addfeed()
+	log("addfeed()")
 	local res={
 		name="feed",
 		outs={},
 		tiks={}  -- signals received
 	}
-	local i=g.wd*(y-1)+x
-	g.dat[i]=res
-	add(g.dvcs,i)
+	local x=self.x
+	local y=self.y
+	local i=self.wd*(y-1)+x
+	self.dat[i]=res
+	add(self.dvcs,i)
 	return res
 end
 
-function addlamp(
-	g, -- grid       : table
-	x, -- x position : number
-	y  -- y position : number
-	)
-	local l="addlamp(_g,"
-	l=l..x..","..y..")"
-	log(l)
+function grid:addlamp()
+	log("addlamp()")
 	local res={
 		name="lamp",
 		tiks={}  -- signals received
 	}
-	local i=g.wd*(y-1)+x
-	g.dat[i]=res
-	add(g.dvcs,i)
+	local x=self.x
+	local y=self.y
+	local i=self.wd*(y-1)+x
+	self.dat[i]=res
+	add(self.dvcs,i)
 	return res
 end
 
@@ -161,16 +145,15 @@ function addifnew(l,n)
 	end
 end
 
-function connect(
-	g,     -- grid      : table
+function grid:connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
-	local l="connect(_g,"
+	local l="connect("
 	l=l..sx..","..sy..","
 	l=l..ex..","..ey..")"
 	log(l)
-	local si=g.wd*(sy-1)+sx
+	local si=self.wd*(sy-1)+sx
 	local sdy=mid(-1,ey-sy,1)
 	local sdx=mid(-1,ex-sx,1)
 	local so=1
@@ -183,13 +166,13 @@ function connect(
 			break
 		end
 	end
-	if g.dat[si]==0 then
-		g.dat[si]=newwire(so)
-		add(g.dvcs,si)
+	if self.dat[si]==0 then
+		self.dat[si]=newwire(so)
+		add(self.dvcs,si)
 	elseif sdx!=0 or sdy!=0 then
-		addifnew(g.dat[si].outs,so)
+		addifnew(self.dat[si].outs,so)
 	end
-	local ei=g.wd*(ey-1)+ex
+	local ei=self.wd*(ey-1)+ex
 	local edy=mid(-1,sy-ey,1)
 	local edx=mid(-1,sx-ex,1)
 	local eo=1
@@ -203,12 +186,12 @@ function connect(
 		end
 	end
 	if (
-		g.dat[ei]!=0 and
-		g.dat[ei].name=="wire" and
-		g.dat[si].name=="wire" and
+		self.dat[ei]!=0 and
+		self.dat[ei].name=="wire" and
+		self.dat[si].name=="wire" and
 		(edx!=0 or edy!=0)
 	) then
-		--addifnew(g.dat[ei].outs,eo)
+		--addifnew(self.dat[ei].outs,eo)
 	end
 end
 
@@ -239,15 +222,15 @@ function _make(a)
 		g.dat[idx]=0
 		del(g.dvcs,idx)
 	elseif a==1 then
-		connect(g,_g.x,_g.y,_g.x,_g.y)
+		g:connect(_g.x,_g.y,_g.x,_g.y)
 	elseif a==2 then
-		addflip(g,_g.x,_g.y)
+		g:addflip()
 	elseif a==3 then
-		addnand(g,_g.x,_g.y)
+		g:addnand()
 	elseif a==4 then
-		addfeed(g,_g.x,_g.y)
+		g:addfeed()
 	elseif a==5 then
-		addlamp(g,_g.x,_g.y)
+		g:addlamp()
 	end
 end
 
@@ -256,7 +239,7 @@ function _fuse(a)
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
-	connect(g,
+	g:connect(
 		_g.x,_g.y,
 		_g.x+dx,_g.y+dy
 	)
@@ -604,28 +587,28 @@ function _update()
 		-- toggle the flip
 		cdvc.on=not cdvc.on
 	elseif btn(❎) then
-		connect(_g,lgx,lgy,_g.x,_g.y)
+		_g:connect(lgx,lgy,_g.x,_g.y)
 	elseif (
 		btnp(🅾️) or
 		(btn(🅾️) and cidx!=lidx)
 	) then
 		-- cycle through devices
 		if _g.dat[cidx]==0 then
-			addflip(_g,_g.x,_g.y)
+			_g:addflip()
 		else
 			local dvc=_g.dat[cidx]
 			if dvc.name=="flip" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				addnand(_g,_g.x,_g.y)
+				g:addnand()
 			elseif dvc.name=="nand" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				addfeed(_g,_g.x,_g.y)
+				g:addfeed()
 			elseif dvc.name=="feed" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				addlamp(_g,_g.x,_g.y)
+				g:addlamp()
 			else
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
