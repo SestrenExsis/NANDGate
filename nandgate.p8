@@ -93,6 +93,23 @@ function grid:new(
 	)
 end
 
+function grid:idxof(x,y)
+	local res=(y-1)*self.wd+self.x
+	return res
+end
+
+function grid:xof(idx)
+	local res=(idx-1)%self.wd+1
+	return res
+end
+
+function grid:yof(idx)
+	local res=flr(
+		(idx-1)/self.wd
+	)+1
+	return res
+end
+
 function grid:connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
@@ -148,7 +165,7 @@ function grid:make(a)
 	local x=self.x
 	local y=self.y
 	if a==0 then
-		local idx=idxof(x,y)
+		local idx=self:idxof(x,y)
 		self.dat[idx]=0
 		del(self.dvcs,idx)
 	elseif a==1 then
@@ -386,23 +403,6 @@ function _init()
 	)
 end
 
-function idxof(x,y)
-	local res=(y-1)*_g.wd+_g.x
-	return res
-end
-
-function xof(idx)
-	local res=(idx-1)%_g.wd+1
-	return res
-end
-
-function yof(idx)
-	local res=flr(
-		(idx-1)/_g.wd
-	)+1
-	return res
-end
-
 function device(
 	g, -- grid         : table
 	i, -- device index : number
@@ -530,8 +530,8 @@ function _update()
 	elseif btnp(⬇️) then
 		_g:move(2,1)
 	end
-	local lidx=idxof(lgx,lgy)
-	local cidx=idxof(_g.x,_g.y)
+	local lidx=_g:idxof(lgx,lgy)
+	local cidx=_g:idxof(_g.x,_g.y)
 	local cdvc=device(_g,cidx)
 	if (
 		btnp(❎) and
@@ -603,8 +603,8 @@ function _draw()
 	-- draw wires
 	local todo={}
 	for idx in all(_g.dvcs) do
-		local gx=xof(idx)
-		local gy=yof(idx)
+		local gx=_g:xof(idx)
+		local gy=_g:yof(idx)
 		local sx=gx*3+_g.sx
 		local sy=gy*3+_g.sy
 		local dvc=_g.dat[idx]
@@ -628,8 +628,8 @@ function _draw()
 	end
 	-- draw other devices
 	for idx in all(todo) do
-		local gx=xof(idx)
-		local gy=yof(idx)
+		local gx=_g:xof(idx)
+		local gy=_g:yof(idx)
 		local sx=gx*3+_g.sx
 		local sy=gy*3+_g.sy
 		local dvc=_g.dat[idx]
@@ -708,7 +708,7 @@ function _draw()
 	print(#_g.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
 	print(stat(1),96,120,1)
-	local cidx=idxof(_g.x,_g.y)
+	local cidx=_g:idxof(_g.x,_g.y)
 	local cdvc=_g.dat[cidx]
 	if (
 		cdvc!=0 and
