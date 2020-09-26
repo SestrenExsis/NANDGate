@@ -6,7 +6,9 @@ __lua__
 -- github.com/sestrenexsis/nandgate
 
 _me="sestrenexsis"
-_cart="nandgate" -- "bredbord"?
+_cart="nandgate"
+-- "bredbord"?
+-- ace circuits?
 cartdata(_me.."_".._cart.."_1")
 _version=1
 
@@ -98,15 +100,13 @@ function grid:idxof(x,y)
 	return res
 end
 
-function grid:xof(idx)
-	local res=(idx-1)%self.wd+1
+function grid:xof(i)
+	local res=(i-1)%self.wd+1
 	return res
 end
 
-function grid:yof(idx)
-	local res=flr(
-		(idx-1)/self.wd
-	)+1
+function grid:yof(i)
+	local res=flr((i-1)/self.wd)+1
 	return res
 end
 
@@ -132,6 +132,47 @@ function grid:connect(
 		add(self.dvcs,si)
 	elseif sdx!=0 or sdy!=0 then
 		addifnew(self.dat[si].outs,so)
+	end
+end
+
+function grid:run(
+	cmds -- commands : table
+)
+	local i=0
+	while i<#cmds do
+		local cmd=cmds[i]
+		if cmd==1 then
+			local a=cmds[i+1]
+			local b=cmds[i+2]
+			self:setx(0x10*a+b)
+			i+=3
+		elseif cmd==2 then
+			local a=cmds[i+1]
+			local b=cmds[i+2]
+			self:sety(0x10*a+b)
+			i+=3
+		elseif cmd==3 then
+			self:push()
+			i+=1
+		elseif cmd==4 then
+			self:pull()
+			i+=1
+		elseif cmd==5 then
+			local a=cmds[i+1]
+			self:make(a)
+			i+=2
+		elseif cmd==6 then
+			local a=cmds[i+1]
+			self:fuse(a)
+			i+=2
+		elseif cmd==7 then
+			local a=cmds[i+1]
+			local b=cmds[i+2]
+			self:move(a,b)
+			i+=3
+		else
+			i+=1
+		end
 	end
 end
 
@@ -227,142 +268,43 @@ function grid:move(a,b)
 	self.y=mid(1,self.y+dy,self.ht)
 end
 
-function grid:makehalfadder(x,y)
-	local msg="-- half adder"
-	printh(msg,_cart)
-	self:setx(x)
-	self:sety(y)
-	self:move(2,1)
-	self:make(2) -- flip
-	self:fuse(6)
-	self:fuse(6)
-	self:push()
-	self:fuse(8)
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:push()
-	self:fuse(8)
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:make(5) -- lamp
-	self:pull()
-	self:fuse(2)
-	self:fuse(6)
-	self:fuse(8)
-	self:pull()
-	self:fuse(2)
-	self:fuse(2)
-	self:fuse(2)
-	self:make(4) -- feed
-	self:push()
-	self:fuse(2)
-	self:fuse(2)
-	self:fuse(2)
-	self:fuse(6)
-	self:push()
-	self:fuse(6)
-	self:fuse(8)
-	self:make(3) -- nand
-	self:pull()
-	self:fuse(8)
-	self:fuse(8)
-	self:make(3) -- nand
-	self:pull()
-	self:move(4,2)
-	self:move(2,1)
-	self:make(2) -- flip
-	self:fuse(6)
-	self:fuse(8)
-	self:fuse(6)
-	self:fuse(6)
-	self:push()
-	self:fuse(8)
-	self:push()
-	self:fuse(8)
-	self:fuse(8)
-	self:pull()
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:make(5) -- lamp
-	self:pull()
-	self:fuse(2)
-	self:fuse(6)
-	self:push()
-	self:fuse(8)
-	self:pull()
-	self:fuse(2)
-	self:fuse(6)
-	self:fuse(8)
-end
-
-function grid:makesrflipflop(x,y)
-	local msg="-- sr flip flop"
-	printh(msg,_cart)
-	self:setx(x)
-	self:sety(y)
-	self:push()
-	self:make(2) -- flip
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:fuse(8)
-	self:fuse(6)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:fuse(6)
-	self:fuse(6)
-	self:fuse(6)
-	self:make(5) -- lamp
-	self:move(4,1)
-	self:fuse(2)
-	self:fuse(2)
-	self:fuse(4)
-	self:make(4) -- feed
-	self:fuse(4)
-	self:fuse(4)
-	self:fuse(2)
-	self:pull()
-	self:move(2,2)
-	self:make(2) -- flip
-	self:fuse(6)
-	self:fuse(8)
-	self:move(2,1)
-	self:fuse(2)
-	self:make(3) -- nand
-	self:move(1,1)
-	self:make(2) -- flip
-	self:fuse(6)
-	self:fuse(8)
-	self:fuse(6)
-	self:fuse(2)
-	self:fuse(2)
-	self:fuse(6)
-	self:fuse(8)
-	self:make(3) -- nand
-	self:fuse(6)
-	self:fuse(6)
-	self:push()
-	self:fuse(6)
-	self:fuse(6)
-	self:make(5) -- lamp
-	self:pull()
-	self:fuse(8)
-	self:fuse(8)
-	self:fuse(4)
-	self:fuse(4)
-	self:fuse(8)
-end
+_cmds={
+	half_adder={
+		7,2,1,5,2,6,6,6,
+		6,3,6,8,6,6,6,2,
+		5,3,6,6,3,6,8,6,
+		6,6,2,5,3,6,6,5,
+		5,4,6,2,6,6,6,8,
+		4,6,2,6,2,6,2,5,
+		4,3,6,2,6,2,6,2,
+		6,6,3,6,6,6,8,5,
+		3,4,6,8,6,8,5,3,
+		4,7,4,2,7,2,1,5,
+		2,6,6,6,8,6,6,6,
+		6,3,6,8,3,6,8,6,
+		8,4,6,6,6,2,5,3,
+		6,6,6,2,5,3,6,6,
+		5,5,4,6,2,6,6,3,
+		6,8,4,6,2,6,6,6,
+		8
+	},
+	sr_flip_flop={
+		3,5,2,6,6,6,2,5,
+		3,6,6,6,8,6,6,6,
+		2,5,3,6,6,6,6,6,
+		6,6,6,5,5,7,4,1,
+		6,2,6,2,6,4,5,4,
+		6,4,6,4,6,2,4,7,
+		2,2,5,2,6,6,6,8,
+		7,2,1,6,2,5,3,7,
+		1,1,5,2,6,6,6,8,
+		6,6,6,2,6,2,6,6,
+		6,8,5,3,6,6,6,6,
+		3,6,6,6,6,5,5,4,
+		6,8,6,8,6,4,6,4,
+		6,8
+	}
+}
 -->8
 -- game loops
 
@@ -386,9 +328,15 @@ function _init()
 	printh("",_cart,true)
 	_g=grid:new(32,32)
 	-- add starting devices
-	_g:makehalfadder(1,1)
-	_g:makehalfadder(9,5)
-	_g:makesrflipflop(1,16)
+	_g:setx(1)
+	_g:sety(1)
+	_g:run(_cmds.half_adder)
+	_g:setx(9)
+	_g:sety(5)
+	_g:run(_cmds.half_adder)
+	_g:setx(1)
+	_g:sety(16)
+	_g:run(_cmds.sr_flip_flop)
 	printh("-- interactive",_cart)
 	-- alter color palette
 	_pals={
