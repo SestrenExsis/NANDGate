@@ -22,14 +22,10 @@ _dirs={ -- {x,y}
 	}
 _opps={9,8,7,6,5,4,3,2,1}
 _ortho={2,4,6,8}
-_llog=""
 _clk=16
 
 function log(l)
-	if l!=_llog then
-		printh(l,_cart)
-	end
-	_llog=l
+	printh(l,_cart)
 end
 
 function newwire(
@@ -55,6 +51,17 @@ function addifnew(l,n)
 		add(l,n)
 	end
 end
+
+function hex(n,l)
+	local str=tostr(n,true)
+	local res=""
+	for i=7-l,6 do
+		res=res..sub(str,i,i)
+	end
+	return res
+end
+-->8
+-- grid
 
 grid={}
 
@@ -86,74 +93,10 @@ function grid:new(
 	)
 end
 
-function grid:addflip()
-	log("addflip()")
-	local res={
-		name="flip",
-		outs={},
-		ltik=-1, -- last powered tick
-		on=true
-	}
-	local x=self.x
-	local y=self.y
-	local i=self.wd*(y-1)+x
-	self.dat[i]=res
-	add(self.dvcs,i)
-	return res
-end
-
-function grid:addnand()
-	log("addnand()")
-	local res={
-		name="nand",
-		outs={6},
-		tiks={}  -- signals received
-	}
-	local x=self.x
-	local y=self.y
-	local i=self.wd*(y-1)+x
-	self.dat[i]=res
-	add(self.dvcs,i)
-	return res
-end
-
-function grid:addfeed()
-	log("addfeed()")
-	local res={
-		name="feed",
-		outs={},
-		tiks={}  -- signals received
-	}
-	local x=self.x
-	local y=self.y
-	local i=self.wd*(y-1)+x
-	self.dat[i]=res
-	add(self.dvcs,i)
-	return res
-end
-
-function grid:addlamp()
-	log("addlamp()")
-	local res={
-		name="lamp",
-		tiks={}  -- signals received
-	}
-	local x=self.x
-	local y=self.y
-	local i=self.wd*(y-1)+x
-	self.dat[i]=res
-	add(self.dvcs,i)
-	return res
-end
-
 function grid:connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
-	local l="connect("
-	l=l..sx..","..sy..","
-	l=l..ex..","..ey..")"
-	log(l)
 	local si=self.wd*(sy-1)+sx
 	local sdy=mid(-1,ey-sy,1)
 	local sdx=mid(-1,ex-sx,1)
@@ -173,43 +116,26 @@ function grid:connect(
 	elseif sdx!=0 or sdy!=0 then
 		addifnew(self.dat[si].outs,so)
 	end
-	local ei=self.wd*(ey-1)+ex
-	local edy=mid(-1,sy-ey,1)
-	local edx=mid(-1,sx-ex,1)
-	local eo=1
-	for k,v in pairs(_dirs) do
-		if (
-			v[1]==edx and
-			v[2]==edy
-		) then
-			eo=k
-			break
-		end
-	end
-	if (
-		self.dat[ei]!=0 and
-		self.dat[ei].name=="wire" and
-		self.dat[si].name=="wire" and
-		(edx!=0 or edy!=0)
-	) then
-		--addifnew(self.dat[ei].outs,eo)
-	end
 end
 
 function grid:setx(aa)
+	log("1"..hex(aa,2))
 	self.x=aa
 end
 
 function grid:sety(aa)
+	log("2"..hex(aa,2))
 	self.y=aa
 end
 
 function grid:push()
+	log("3")
 	add(self.stk,self.x)
 	add(self.stk,self.y)
 end
 
 function grid:pull()
+	log("4")
 	local n=#self.stk
 	if n>1 then
 		self.y=deli(self.stk,n)
@@ -217,26 +143,53 @@ function grid:pull()
 	end
 end
 
-function _make(a)
-	local g=_g
+function grid:make(a)
+	log("5"..hex(a,1))
+	local x=self.x
+	local y=self.y
 	if a==0 then
-		local idx=(_g.y-1)*g.wd+_g.x
-		g.dat[idx]=0
-		del(g.dvcs,idx)
+		local idx=idxof(x,y)
+		self.dat[idx]=0
+		del(self.dvcs,idx)
 	elseif a==1 then
-		g:connect(_g.x,_g.y,_g.x,_g.y)
-	elseif a==2 then
-		g:addflip()
-	elseif a==3 then
-		g:addnand()
-	elseif a==4 then
-		g:addfeed()
-	elseif a==5 then
-		g:addlamp()
+		self:connect(x,y,x,y)
+	else
+		local i=self.wd*(y-1)+x
+		local dvc=0
+		if a==2 then
+			dvc={
+				name="flip",
+				outs={},
+				ltik=-1,
+				on=true
+			}
+		elseif a==3 then
+			dvc={
+				name="nand",
+				outs={6},
+				tiks={}
+			}
+		elseif a==4 then
+			dvc={
+				name="feed",
+				outs={},
+				tiks={}
+			}
+		elseif a==5 then
+			dvc={
+				name="lamp",
+				tiks={}
+			}
+		else
+			assert(1==2)
+		end
+		self.dat[i]=dvc
+		add(self.dvcs,i)
 	end
 end
 
 function grid:fuse(a)
+	log("6"..hex(a,1))
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
@@ -249,6 +202,7 @@ function grid:fuse(a)
 end
 
 function grid:move(a,b)
+	log("7"..hex(a,1)..hex(b,1))
 	local d=_dirs[a]
 	local dx=b*d[1]
 	local dy=b*d[2]
@@ -262,22 +216,22 @@ function grid:makehalfadder(x,y)
 	self:setx(x)
 	self:sety(y)
 	self:move(2,1)
-	_make(2) -- flip
+	self:make(2) -- flip
 	self:fuse(6)
 	self:fuse(6)
 	self:push()
 	self:fuse(8)
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
 	self:push()
 	self:fuse(8)
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
-	_make(5) -- lamp
+	self:make(5) -- lamp
 	self:pull()
 	self:fuse(2)
 	self:fuse(6)
@@ -286,7 +240,7 @@ function grid:makehalfadder(x,y)
 	self:fuse(2)
 	self:fuse(2)
 	self:fuse(2)
-	_make(4) -- feed
+	self:make(4) -- feed
 	self:push()
 	self:fuse(2)
 	self:fuse(2)
@@ -295,15 +249,15 @@ function grid:makehalfadder(x,y)
 	self:push()
 	self:fuse(6)
 	self:fuse(8)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:pull()
 	self:fuse(8)
 	self:fuse(8)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:pull()
 	self:move(4,2)
 	self:move(2,1)
-	_make(2) -- flip
+	self:make(2) -- flip
 	self:fuse(6)
 	self:fuse(8)
 	self:fuse(6)
@@ -316,12 +270,12 @@ function grid:makehalfadder(x,y)
 	self:pull()
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
-	_make(5) -- lamp
+	self:make(5) -- lamp
 	self:pull()
 	self:fuse(2)
 	self:fuse(6)
@@ -339,38 +293,38 @@ function grid:makesrflipflop(x,y)
 	self:setx(x)
 	self:sety(y)
 	self:push()
-	_make(2) -- flip
+	self:make(2) -- flip
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
 	self:fuse(8)
 	self:fuse(6)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
 	self:fuse(6)
 	self:fuse(6)
 	self:fuse(6)
-	_make(5) -- lamp
+	self:make(5) -- lamp
 	self:move(4,1)
 	self:fuse(2)
 	self:fuse(2)
 	self:fuse(4)
-	_make(4) -- feed
+	self:make(4) -- feed
 	self:fuse(4)
 	self:fuse(4)
 	self:fuse(2)
 	self:pull()
 	self:move(2,2)
-	_make(2) -- flip
+	self:make(2) -- flip
 	self:fuse(6)
 	self:fuse(8)
 	self:move(2,1)
 	self:fuse(2)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:move(1,1)
-	_make(2) -- flip
+	self:make(2) -- flip
 	self:fuse(6)
 	self:fuse(8)
 	self:fuse(6)
@@ -378,13 +332,13 @@ function grid:makesrflipflop(x,y)
 	self:fuse(2)
 	self:fuse(6)
 	self:fuse(8)
-	_make(3) -- nand
+	self:make(3) -- nand
 	self:fuse(6)
 	self:fuse(6)
 	self:push()
 	self:fuse(6)
 	self:fuse(6)
-	_make(5) -- lamp
+	self:make(5) -- lamp
 	self:pull()
 	self:fuse(8)
 	self:fuse(8)
@@ -594,21 +548,21 @@ function _update()
 	) then
 		-- cycle through devices
 		if _g.dat[cidx]==0 then
-			_g:addflip()
+			_g:make(2)
 		else
 			local dvc=_g.dat[cidx]
 			if dvc.name=="flip" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				_g:addnand()
+				_g:make(3)
 			elseif dvc.name=="nand" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				_g:addfeed()
+				_g:make(4)
 			elseif dvc.name=="feed" then
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
-				_g:addlamp()
+				_g:make(5)
 			else
 				_g.dat[cidx]=0
 				del(_g.dvcs,cidx)
