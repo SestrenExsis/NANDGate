@@ -85,7 +85,8 @@ function grid:new(
 			  -1,   0,   1, -- 456
 			-w-1,-w  ,-w+1  -- 789
 		},
-		stk={}
+		stk={},
+		hst={}
 	}
 	for i=1,w*h do
 		add(obj.dat,0)
@@ -179,17 +180,24 @@ end
 function grid:setx(aa)
 	log("1"..hex(aa,2))
 	self.x=aa
+	add(self.hst,1)
+	add(self.hst,flr(aa/0x10))
+	add(self.hst,aa%0x10)
 end
 
 function grid:sety(aa)
 	log("2"..hex(aa,2))
 	self.y=aa
+	add(self.hst,2)
+	add(self.hst,flr(aa/0x10))
+	add(self.hst,aa%0x10)
 end
 
 function grid:push()
 	log("3")
 	add(self.stk,self.x)
 	add(self.stk,self.y)
+	add(self.hst,3)
 end
 
 function grid:pull()
@@ -199,6 +207,7 @@ function grid:pull()
 		self.y=deli(self.stk,n)
 		self.x=deli(self.stk,n-1)
 	end
+	add(self.hst,4)
 end
 
 function grid:make(a)
@@ -244,6 +253,8 @@ function grid:make(a)
 		self.dat[i]=dvc
 		add(self.dvcs,i)
 	end
+	add(self.hst,5)
+	add(self.hst,a%0x10)
 end
 
 function grid:fuse(a)
@@ -257,6 +268,8 @@ function grid:fuse(a)
 	)
 	self.x+=dx
 	self.y+=dy
+	add(self.hst,6)
+	add(self.hst,a%0x10)
 end
 
 function grid:move(a,b)
@@ -266,6 +279,9 @@ function grid:move(a,b)
 	local dy=b*d[2]
 	self.x=mid(1,self.x+dx,self.wd)
 	self.y=mid(1,self.y+dy,self.ht)
+	add(self.hst,7)
+	add(self.hst,flr(a%0x10))
+	add(self.hst,b%0x10)
 end
 
 _cmds={
@@ -523,6 +539,15 @@ function _update()
 		for i=1,_clk do
 			tick(_g)
 		end
+	elseif btnp(⬅️,1) then
+		-- save history to spritesheet
+		for i=1,#_g.hst do
+			local x=(i-1)%128
+			local y=flr((i-1)/128)
+			local c=_g[i]
+			sset(x,y,c)
+		end
+		--cstore(
 	end
 end
 
@@ -672,10 +697,3 @@ function _draw()
 		end
 	end
 end
-__gfx__
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
