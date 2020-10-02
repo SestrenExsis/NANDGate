@@ -111,6 +111,24 @@ function grid:yof(i)
 	return res
 end
 
+function grid:device(
+	i, -- device index : number
+	d  -- direction    : number
+	)
+	local res=nil
+	if d==nil then
+		d=5
+	end
+	local j=i+self.dirs[d]
+	if j>=1 and j<=#self.dat then
+		local dvc=self.dat[j]
+		if dvc!=nil and dvc!=0 then
+			res=dvc
+		end
+	end
+	return res
+end
+
 function grid:connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
@@ -266,6 +284,22 @@ function grid:fuse(a)
 		self.x,self.y,
 		self.x+dx,self.y+dy
 	)
+	local idx=self:idxof(
+		self.x,self.y
+	)
+	local dvc=self:device(idx)
+	local ndvc=self:device(idx,a)
+	if (
+		dvc!=nil and
+		dvc.name=="wire" and
+		ndvc!=nil and
+		ndvc.name=="wire"
+	) then
+		self:connect(
+			self.x+dx,self.y+dy,
+			self.x,self.y
+		)
+	end
 	self.x+=dx
 	self.y+=dy
 	add(self.hst,6)
@@ -400,25 +434,6 @@ function _init()
 	)
 end
 
-function device(
-	g, -- grid         : table
-	i, -- device index : number
-	d  -- direction    : number
-	)
-	local res=nil
-	if d==nil then
-		d=5
-	end
-	local j=i+g.dirs[d]
-	if j>=1 and j<=#g.dat then
-		local dvc=g.dat[j]
-		if dvc!=nil and dvc!=0 then
-			res=dvc
-		end
-	end
-	return res
-end
-
 function output(
 	d -- device : table
 	)
@@ -473,7 +488,7 @@ function tick(
 		local lidx=src[1]
 		local idx=src[2]
 		local lout=src[3]
-		local dvc=device(g,idx)
+		local dvc=_g:device(idx)
 		if (
 			dvc!=nil and
 			dvc.ltik!=_tick
@@ -530,7 +545,7 @@ function _update()
 	end
 	local lidx=_g:idxof(lgx,lgy)
 	local cidx=_g:idxof(_g.x,_g.y)
-	local cdvc=device(_g,cidx)
+	local cdvc=_g:device(cidx)
 	if (
 		btnp(❎) and
 		cdvc!=nil and
@@ -676,8 +691,8 @@ function _draw()
 				tk[out]=1
 			end
 			for out in all(dvc.outs) do
-				local ndvc=device(
-					_g,idx,out
+				local ndvc=_g:device(
+					idx,out
 				)
 				if ndvc!=nil and out!=5 then
 					local c=2
