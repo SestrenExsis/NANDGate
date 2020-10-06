@@ -398,12 +398,14 @@ function _init()
 	printh("",_cart,true)
 	_tools={
 		"delete",
-		"interact",
-		"wire",
-		"flip",
-		"nand",
 		"feed",
 		"lamp",
+		"flip",
+		"interact",
+		"wire",
+		"-",
+		"nand",
+		"-"
 		}
 	_tool=3
 	_g=grid:new(32,32)
@@ -546,18 +548,36 @@ function _update()
 	-- input
 	local lgx=_g.x
 	local lgy=_g.y
-	if btnp(⬅️) then
-		_g:move(4,1)
-	elseif btnp(➡️) then
-		_g:move(6,1)
-	end
-	if btnp(⬆️) then
-		_g:move(8,1)
-	elseif btnp(⬇️) then
-		_g:move(2,1)
-	end
-	if btnp(🅾️) then
-		_tool=1+(_tool)%#_tools
+	if btn(🅾️) then
+		local lf=btn(⬅️)
+		local rt=btn(➡️)
+		local up=btn(⬆️)
+		local dn=btn(⬇️)
+		if lf and not rt then
+			_tool=1
+		elseif rt and not lf then
+			_tool=3
+		else
+			_tool=2
+		end
+		if dn and not up then
+			_tool+=0
+		elseif up and not dn then
+			_tool+=6
+		else
+			_tool+=3
+		end
+	else
+		if btnp(⬅️) then
+			_g:move(4,1)
+		elseif btnp(➡️) then
+			_g:move(6,1)
+		end
+		if btnp(⬆️) then
+			_g:move(8,1)
+		elseif btnp(⬇️) then
+			_g:move(2,1)
+		end
 	end
 	local tool=_tools[_tool]
 	local lidx=_g:idxof(lgx,lgy)
