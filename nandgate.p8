@@ -396,6 +396,16 @@ function _init()
 	_tick=0
 	-- grid
 	printh("",_cart,true)
+	_tools={
+		"delete",
+		"interact",
+		"wire",
+		"flip",
+		"nand",
+		"feed",
+		"lamp",
+		}
+	_tool=3
 	_g=grid:new(32,32)
 	cmds={}
 	for y=0,127 do
@@ -404,9 +414,9 @@ function _init()
 			add(cmds,c)
 		end
 	end
-	_g:run(cmds)
+	--_g:run(cmds)
 	-- add starting devices
-	--[[
+	---[[
 	_g:setx(3)
 	_g:sety(6)
 	_g:run(_cmds.half_adder)
@@ -546,35 +556,43 @@ function _update()
 	elseif btnp(⬇️) then
 		_g:move(2,1)
 	end
+	if btnp(🅾️) then
+		_tool=1+(_tool)%#_tools
+	end
+	local tool=_tools[_tool]
 	local lidx=_g:idxof(lgx,lgy)
 	local cidx=_g:idxof(_g.x,_g.y)
 	local cdvc=_g:device(cidx)
-	if (
-		btnp(❎) and
-		cdvc!=nil and
-		cdvc.name=="flip"
-	) then
-		-- toggle the flip
-		cdvc.on=not cdvc.on
-	elseif btn(❎) then
-		_g:connect(lgx,lgy,_g.x,_g.y)
-	elseif (
-		btnp(🅾️) or
-		(btn(🅾️) and cidx!=lidx)
-	) then
-		-- cycle through devices
-		if _g.dat[cidx]==0 then
-			_g:make(2)
-		else
-			local dvc=_g.dat[cidx]
-			if dvc.name=="flip" then
+	if tool=="interact" then
+		if (
+			btnp(❎) and
+			cdvc!=nil and
+			cdvc.name=="flip"
+		) then
+			-- toggle the flip
+			cdvc.on=not cdvc.on
+		elseif btnp(❎) then
+			-- advance 1 tick
+			tick(_g)
+		end
+	elseif tool=="wire" then
+		if btn(❎) then
+			_g:connect(lgx,lgy,_g.x,_g.y)
+		end
+	elseif tool=="delete" then
+		if btn(❎) then
+			_g:make(0)
+		end
+	else
+		if btnp(❎) then
+			if tool=="flip" then
+				_g:make(2)
+			elseif tool=="nand" then
 				_g:make(3)
-			elseif dvc.name=="nand" then
+			elseif tool=="feed" then
 				_g:make(4)
-			elseif dvc.name=="feed" then
+			elseif tool=="lamp" then
 				_g:make(5)
-			else
-				_g:make(0)
 			end
 		end
 	end
@@ -725,6 +743,9 @@ function _draw()
 	local sx=_g.x*3+_g.sx
 	local sy=_g.y*3+_g.sy
 	rect(sx-2,sy-2,sx+2,sy+2,1)
+	local msg=_tool..": "
+	msg=msg.._tools[_tool]
+	print(msg,15,1,4)
 	-- draw debug info
 	print(#_g.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
