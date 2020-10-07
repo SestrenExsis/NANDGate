@@ -407,7 +407,8 @@ function _init()
 		"nand",
 		"-"
 		}
-	_tool=3
+	_toolidx=3
+	_toolbox=false
 	_g=grid:new(32,32)
 	cmds={}
 	for y=0,127 do
@@ -549,25 +550,27 @@ function _update()
 	local lgx=_g.x
 	local lgy=_g.y
 	if btn(🅾️) then
+		_toolbox=true
 		local lf=btn(⬅️)
 		local rt=btn(➡️)
 		local up=btn(⬆️)
 		local dn=btn(⬇️)
 		if lf and not rt then
-			_tool=1
+			_toolidx=1
 		elseif rt and not lf then
-			_tool=3
+			_toolidx=3
 		else
-			_tool=2
+			_toolidx=2
 		end
 		if dn and not up then
-			_tool+=0
+			_toolidx+=0
 		elseif up and not dn then
-			_tool+=6
+			_toolidx+=6
 		else
-			_tool+=3
+			_toolidx+=3
 		end
 	else
+		_toolbox=false
 		if btnp(⬅️) then
 			_g:move(4,1)
 		elseif btnp(➡️) then
@@ -763,9 +766,6 @@ function _draw()
 	local sx=_g.x*3+_g.sx
 	local sy=_g.y*3+_g.sy
 	rect(sx-2,sy-2,sx+2,sy+2,1)
-	local msg=_tool..": "
-	msg=msg.._tools[_tool]
-	print(msg,15,1,4)
 	-- draw debug info
 	print(#_g.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
@@ -784,6 +784,18 @@ function _draw()
 			local dy=d[2]
 			pset(sx+2*dx,sy+2*dy,11)
 		end
+	end
+	-- draw toolbox
+	local msg=_toolidx..": "
+	msg=msg.._tools[_toolidx]
+	print(msg,15,1,4)
+	if _toolbox then
+		local lf=_g.sx+3*_g.x-6
+		local tp=_g.sy+3*_g.y-6
+		rectfill(lf,tp,lf+12,tp+12,1)
+		lf+=1+4*((_toolidx-1)%3)
+		tp+=1+4*flr((9-_toolidx)/3)
+		rectfill(lf,tp,lf+2,tp+2,0)
 	end
 end
 __gfx__
