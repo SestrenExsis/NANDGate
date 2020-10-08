@@ -582,7 +582,7 @@ function _update()
 			_g:move(2,1)
 		end
 	end
-	local tool=_tools[_tool]
+	local tool=_tools[_toolidx]
 	local lidx=_g:idxof(lgx,lgy)
 	local cidx=_g:idxof(_g.x,_g.y)
 	local cdvc=_g:device(cidx)
@@ -782,6 +782,7 @@ function _draw()
 	print(#_g.dvcs,1,120,1)
 	print(stat(0)/2048,96,114,1)
 	print(stat(1),96,120,1)
+	print(_tick,64,120,1)
 	local cidx=_g:idxof(_g.x,_g.y)
 	local cdvc=_g.dat[cidx]
 	if (
