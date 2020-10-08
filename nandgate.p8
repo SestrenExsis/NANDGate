@@ -407,7 +407,7 @@ function _init()
 		"nand",
 		"-"
 		}
-	_toolidx=3
+	_toolidx=5
 	_toolbox=false
 	_g=grid:new(32,32)
 	cmds={}
@@ -640,6 +640,94 @@ function _update()
 	end
 end
 
+function drawdevice(
+	g,   -- grid         : table
+	idx, -- device index : number
+	dvc, -- device       : table
+	x,   -- screen x     : number
+	y    -- screen y     : number
+	)
+	local dvcn=dvc.name
+	if dvcn=="wire" then
+		local c=2
+		if dvc.ltik==_tick then
+			c=3
+		end
+		for out in all(dvc.outs) do
+			local d=_dirs[out]
+			local dx=d[1]
+			local dy=d[2]
+			line(
+				x,y,x+2*dx,y+2*dy,c
+			)
+		end
+	elseif dvcn=="flip" then
+		rect(x-1,y-1,x+1,y+1,4)
+		local c=2
+		if dvc.ltik==_tick then
+			c=3
+		end
+		for out in all(dvc.outs) do
+			local d=_dirs[out]
+			local dx=d[1]
+			local dy=d[2]
+			line(
+				x,y,x+2*dx,y+2*dy,c
+			)
+		end
+		c=2
+		if dvc.on then
+			c=3
+		end
+		pset(x,y,c)
+	elseif dvcn=="nand" then
+		rectfill(x-1,y-1,x,y+1,4)
+		pset(x+1,y,4)
+		local c=3
+		if #dvc.tiks==2 then
+			c=2
+		end
+		for out in all(dvc.outs) do
+			local d=_dirs[out]
+			local dx=d[1]
+			local dy=d[2]
+			pset(x+2*dx,y+2*dy,c)
+		end
+	elseif dvcn=="feed" then
+		pset(x,y,4)
+		local tk={0,0,0,0,0,0,0,0,0}
+		for out in all(dvc.tiks) do
+			tk[out]=1
+		end
+		for out in all(dvc.outs) do
+			local ndvc=g:device(
+				idx,out
+			)
+			if ndvc!=nil and out!=5 then
+				local c=2
+				local d=_dirs[out]
+				local dx=d[1]
+				local dy=d[2]
+				if tk[out]==1 then
+					c=3
+				end
+				line(
+					x+dx,y+dy,
+					x+2*dx,y+2*dy,c
+				)
+			end
+		end
+	elseif dvcn=="lamp" then
+		local c=2
+		if dvc.ltik==_tick then
+			c=3
+		end
+		rectfill(
+			x-1,y-1,x+1,y+1,c
+		)
+	end
+end
+
 function _draw()
 	cls(0)
 	-- draw palette
@@ -672,18 +760,7 @@ function _draw()
 		local dvc=_g.dat[idx]
 		local dvcn=dvc.name
 		if dvcn=="wire" then
-			local c=2
-			if dvc.ltik==_tick then
-				c=3
-			end
-			for out in all(dvc.outs) do
-				local d=_dirs[out]
-				local dx=d[1]
-				local dy=d[2]
-				line(
-					sx,sy,sx+2*dx,sy+2*dy,c
-				)
-			end
+			drawdevice(_g,idx,dvc,sx,sy)
 		else
 			add(todo,idx)
 		end
@@ -695,72 +772,7 @@ function _draw()
 		local sx=gx*3+_g.sx
 		local sy=gy*3+_g.sy
 		local dvc=_g.dat[idx]
-		local dvcn=dvc.name
-		if dvcn=="flip" then
-			rect(sx-1,sy-1,sx+1,sy+1,4)
-			local c=2
-			if dvc.ltik==_tick then
-				c=3
-			end
-			for out in all(dvc.outs) do
-				local d=_dirs[out]
-				local dx=d[1]
-				local dy=d[2]
-				line(
-					sx,sy,sx+2*dx,sy+2*dy,c
-				)
-			end
-			c=2
-			if dvc.on then
-				c=3
-			end
-			pset(sx,sy,c)
-		elseif dvcn=="nand" then
-			rectfill(sx-1,sy-1,sx,sy+1,4)
-			pset(sx+1,sy,4)
-			local c=3
-			if #dvc.tiks==2 then
-				c=2
-			end
-			for out in all(dvc.outs) do
-				local d=_dirs[out]
-				local dx=d[1]
-				local dy=d[2]
-				pset(sx+2*dx,sy+2*dy,c)
-			end
-		elseif dvcn=="feed" then
-			pset(sx,sy,4)
-			local tk={0,0,0,0,0,0,0,0,0}
-			for out in all(dvc.tiks) do
-				tk[out]=1
-			end
-			for out in all(dvc.outs) do
-				local ndvc=_g:device(
-					idx,out
-				)
-				if ndvc!=nil and out!=5 then
-					local c=2
-					local d=_dirs[out]
-					local dx=d[1]
-					local dy=d[2]
-					if tk[out]==1 then
-						c=3
-					end
-					line(
-						sx+dx,sy+dy,
-						sx+2*dx,sy+2*dy,c
-					)
-				end
-			end
-		elseif dvcn=="lamp" then
-			local c=2
-			if dvc.ltik==_tick then
-				c=3
-			end
-			rectfill(
-				sx-1,sy-1,sx+1,sy+1,c
-			)
-		end
+		drawdevice(_g,idx,dvc,sx,sy)
 	end
 	-- draw cursor
 	local sx=_g.x*3+_g.sx
