@@ -640,6 +640,32 @@ function _update()
 	end
 end
 
+function drawdummy(
+	n,  -- name     : string
+	x,  -- x pos    : number
+	y   -- y pos    : number
+	)
+	if n=="wire" then
+		pset(x,y,2)
+	elseif n=="flip" then
+		rect(x-1,y-1,x+1,y+1,4)
+		pset(x,y,2)
+	elseif n=="nand" then
+		rectfill(x-1,y-1,x,y+1,4)
+		pset(x+1,y,4)
+	elseif n=="feed" then
+		pset(x,y,4)
+	elseif n=="lamp" then
+		rectfill(x-1,y-1,x+1,y+1,2)
+	elseif n=="delete" then
+		line(x-1,y-1,x+1,y+1,4)
+		line(x-1,y+1,x+1,y-1,4)
+	elseif n=="interact" then
+		line(x,y-1,x,y+1,4)
+		line(x-1,y,x+1,y,4)
+	end
+end
+
 function drawdevice(
 	g,   -- grid         : table
 	idx, -- device index : number
@@ -805,10 +831,23 @@ function _draw()
 	if _toolbox then
 		local lf=_g.sx+3*_g.x-6
 		local tp=_g.sy+3*_g.y-6
+		local lf_=lf
+		local tp_=tp
 		rectfill(lf,tp,lf+12,tp+12,1)
-		lf+=1+4*((_toolidx-1)%3)
-		tp+=1+4*flr((9-_toolidx)/3)
-		rectfill(lf,tp,lf+2,tp+2,0)
+		lf+=4*((_toolidx-1)%3)
+		tp+=4*flr((9-_toolidx)/3)
+		rectfill(lf,tp,lf+4,tp+4,0)
+		lf=lf_
+		tp=tp_
+		--drawdummy("-",lf+2,tp+2)
+		drawdummy("nand",lf+6,tp+2)
+		--drawdummy("-",lf+10,tp+2)
+		drawdummy("flip",lf+2,tp+6)
+		drawdummy("interact",lf+6,tp+6)
+		drawdummy("wire",lf+10,tp+6)
+		drawdummy("delete",lf+2,tp+10)
+		drawdummy("feed",lf+6,tp+10)
+		drawdummy("lamp",lf+10,tp+10)
 	end
 end
 __gfx__
