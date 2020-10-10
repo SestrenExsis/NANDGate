@@ -549,28 +549,32 @@ function _update()
 	-- input
 	local lgx=_g.x
 	local lgy=_g.y
-	if btn(🅾️) then
-		_toolbox=true
-		local lf=btn(⬅️)
-		local rt=btn(➡️)
-		local up=btn(⬆️)
-		local dn=btn(⬇️)
-		if lf and not rt then
-			_toolidx=1
-		elseif rt and not lf then
-			_toolidx=3
-		else
-			_toolidx=2
+	if btnp(🅾️) then
+		_toolbox=not _toolbox
+		if _toolbox then
+			_toolidx=5
 		end
-		if dn and not up then
-			_toolidx+=0
-		elseif up and not dn then
-			_toolidx+=6
-		else
-			_toolidx+=3
+	end
+	if _toolbox then
+		if btnp(⬅️) then
+			if (_toolidx-1)%3>0 then
+				_toolidx-=1
+			end
+		elseif btnp(➡️) then
+			if (_toolidx-1)%3<2 then
+				_toolidx+=1
+			end
+		end
+		if btnp(⬆️) then
+			if _toolidx<=6 then
+				_toolidx+=3
+			end
+		elseif btnp(⬇️) then
+			if _toolidx>3 then
+				_toolidx-=3
+			end
 		end
 	else
-		_toolbox=false
 		if btnp(⬅️) then
 			_g:move(4,1)
 		elseif btnp(➡️) then
