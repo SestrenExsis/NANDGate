@@ -135,6 +135,10 @@ function grid:connect(
 	sx,sy, -- start pos : numbers
 	ex,ey  -- end pos   : numbers
 	)
+	--local msg="grid:connect("
+	--msg=msg..sx..","..sy..","
+	--msg=msg..ex..","..ey..")"
+	--printh(msg,_cart)
 	local si=self.wd*(sy-1)+sx
 	local sdy=mid(-1,ey-sy,1)
 	local sdx=mid(-1,ex-sx,1)
@@ -198,6 +202,8 @@ function grid:run(
 end
 
 function grid:go(a)
+	--local msg="grid:go("..a..")"
+	--printh(msg,_cart)
 	local d=_dirs[a]
 	local dx=d[1]
 	local dy=d[2]
@@ -206,6 +212,9 @@ function grid:go(a)
 end
 
 function grid:move(a,b)
+	--local msg="grid:move("
+	--msg=msg..a..","..b..")"
+	--printh(msg,_cart)
 	log("7"..hex(a,1)..hex(b,1))
 	local d=_dirs[a]
 	local dx=b*d[1]
@@ -338,7 +347,8 @@ function grid:make(a)
 end
 
 function grid:fuse(a)
-	self:update()
+	--local msg="grid:fuse("..a..")"
+	--printh(msg,_cart)
 	log("6"..hex(a,1))
 	local d=_dirs[a]
 	local dx=d[1]
@@ -363,10 +373,9 @@ function grid:fuse(a)
 			self.lx,self.ly
 		)
 	end
-	self.lx+=dx
-	self.ly+=dy
-	self.x=self.lx
-	self.y=self.ly
+	self:go(a)
+	self.lx=self.x
+	self.ly=self.y
 	add(self.hst,6)
 	add(self.hst,a%0x10)
 end
@@ -628,15 +637,17 @@ function _update()
 			end
 		end
 	else
-		if btnp(⬅️) then
-			_g:go(4)
-		elseif btnp(➡️) then
-			_g:go(6)
-		end
-		if btnp(⬆️) then
-			_g:go(8)
-		elseif btnp(⬇️) then
-			_g:go(2)
+		if not btn(❎) then
+			if btnp(⬅️) then
+				_g:go(4)
+			elseif btnp(➡️) then
+				_g:go(6)
+			end
+			if btnp(⬆️) then
+				_g:go(8)
+			elseif btnp(⬇️) then
+				_g:go(2)
+			end
 		end
 		local tool=_tools[_toolidx]
 		local lidx=_g:idxof(lgx,lgy)
@@ -657,18 +668,20 @@ function _update()
 		elseif tool=="wire" then
 			if btn(❎) then
 				local dr=5
-				if lgx<_g.x then
+				if btnp(⬅️) then
 					dr-=1
-				elseif lgx>_g.x then
+				elseif btnp(➡️) then
 					dr+=1
 				end
-				if lgy<_g.y then
+				if btnp(⬆️) then
 					dr+=3
-				elseif lgy>_g.y then
+				elseif btnp(⬇️) then
 					dr-=3
 				end
 				if dr!=5 then
+					_g:update()
 					_g:fuse(dr)
+					--_g:update()
 				end
 			end
 		elseif tool=="delete" then
