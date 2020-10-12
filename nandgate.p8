@@ -344,11 +344,11 @@ function grid:fuse(a)
 	local dx=d[1]
 	local dy=d[2]
 	self:connect(
-		self.x,self.y,
-		self.x+dx,self.y+dy
+		self.lx,self.ly,
+		self.lx+dx,self.ly+dy
 	)
 	local idx=self:idxof(
-		self.x,self.y
+		self.lx,self.ly
 	)
 	local dvc=self:device(idx)
 	local ndvc=self:device(idx,a)
@@ -359,14 +359,14 @@ function grid:fuse(a)
 		ndvc.name=="wire"
 	) then
 		self:connect(
-			self.x+dx,self.y+dy,
-			self.x,self.y
+			self.lx+dx,self.ly+dy,
+			self.lx,self.ly
 		)
 	end
-	self.x+=dx
-	self.y+=dy
-	self.lx=self.x
-	self.ly=self.y
+	self.lx+=dx
+	self.ly+=dy
+	self.x=self.lx
+	self.y=self.ly
 	add(self.hst,6)
 	add(self.hst,a%0x10)
 end
@@ -656,9 +656,20 @@ function _update()
 			end
 		elseif tool=="wire" then
 			if btn(❎) then
-				_g:connect(
-					lgx,lgy,_g.x,_g.y
-					)
+				local dr=5
+				if lgx<_g.x then
+					dr-=1
+				elseif lgx>_g.x then
+					dr+=1
+				end
+				if lgy<_g.y then
+					dr+=3
+				elseif lgy>_g.y then
+					dr-=3
+				end
+				if dr!=5 then
+					_g:fuse(dr)
+				end
 			end
 		elseif tool=="delete" then
 			if btn(❎) then
@@ -678,8 +689,10 @@ function _update()
 			end
 		end
 	end
-	if btnp(⬆️,1) then
-		tick(_g)
+	if btnp(⬇️,1) then
+		_g:push()
+	elseif btnp(⬆️,1) then
+		_g:pull()
 	elseif btnp(➡️,1) then
 		for i=1,_clk do
 			tick(_g)
