@@ -68,8 +68,8 @@ end
 grid={}
 
 function grid:new(
-	w, -- width      : number
-	h  -- height     : number
+	w,   -- width      : number
+	h    -- height     : number
 	)
 	local obj={
 		wd=w,
@@ -87,11 +87,21 @@ function grid:new(
 			  -1,   0,   1, -- 456
 			-w-1,-w  ,-w+1  -- 789
 		},
-		stk={},
-		hst={}
+		loc={}, -- location stack
+		stk={}, -- prog counter stack
+		hst={}, -- command history
+		lbl={}, -- proc locations
+		pc=1,   -- program counter
+		mem={}  -- program memory
 	}
 	for i=1,w*h do
 		add(obj.dat,0)
+	end
+	for i=1,16 do
+		add(obj.lbl,1)
+	end
+	for i=1,256 do
+		add(obj.mem,0)
 	end
 	return setmetatable(
 		obj,{__index=self}
@@ -160,49 +170,42 @@ function grid:connect(
 	end
 end
 
-function grid:run(
-	str -- commands : string
-)
-	local cmds={}
-	for i=1,#str do
-		local nib=sub(str,i,i)
-		local num=tonum("0x"..nib)
-		add(cmds,num)
-	end
-	local i=1
-	while i<=#cmds do
-		local cmd=cmds[i]
-		if cmd==1 then
-			local a=cmds[i+1]
-			local b=cmds[i+2]
+function grid:run()
+	while self.pc<=#self.mem do
+		local cmd=self.mem[self.pc]
+		if cmd==0 then
+			break
+		elseif cmd==1 then
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
 			self:setx(0x10*a+b)
-			i+=3
+			self.pc+=3
 		elseif cmd==2 then
-			local a=cmds[i+1]
-			local b=cmds[i+2]
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
 			self:sety(0x10*a+b)
-			i+=3
+			self.pc+=3
 		elseif cmd==3 then
 			self:push()
-			i+=1
+			self.pc+=1
 		elseif cmd==4 then
 			self:pull()
-			i+=1
+			self.pc+=1
 		elseif cmd==5 then
-			local a=cmds[i+1]
+			local a=self.mem[self.pc+1]
 			self:make(a)
-			i+=2
+			self.pc+=2
 		elseif cmd==6 then
-			local a=cmds[i+1]
+			local a=self.mem[self.pc+1]
 			self:fuse(a)
-			i+=2
+			self.pc+=2
 		elseif cmd==7 then
-			local a=cmds[i+1]
-			local b=cmds[i+2]
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
 			self:move(a,b)
-			i+=3
+			self.pc+=3
 		else
-			break
+			self.pc+=1
 		end
 	end
 end
@@ -289,17 +292,17 @@ end
 
 function grid:push()
 	log("3")
-	add(self.stk,self.x)
-	add(self.stk,self.y)
+	add(self.loc,self.x)
+	add(self.loc,self.y)
 	add(self.hst,3)
 end
 
 function grid:pull()
 	log("4")
-	local n=#self.stk
+	local n=#self.loc
 	if n>1 then
-		self.ly=deli(self.stk,n)
-		self.lx=deli(self.stk,n-1)
+		self.ly=deli(self.loc,n)
+		self.lx=deli(self.loc,n-1)
 	end
 	self.x=self.lx
 	self.y=self.ly
@@ -445,31 +448,46 @@ function _init()
 	_toolidx=5
 	_toolbox=false
 	_g=grid:new(32,32)
-	cmds=""
+	local str=""
 	for y=0,127 do
 		for x=0,127 do
 			local c=sget(x,y)
-			cmds=cmds..hex(c,1)
+			str=str..hex(c,1)
 		end
 	end
-	--_g:run(cmds)
-	-- add starting devices
-	---[[
-	_g:setx(3)
-	_g:sety(6)
-	_g:run(_cmds.half_adder)
-	_g:setx(10)
-	_g:sety(1)
-	_g:run(_cmds.half_adder)
-	_g:setx(17)
-	_g:sety(7)
-	_g:run(_cmds.or_gate)
-	_g:setx(5)
-	_g:sety(16)
-	_g:run(_cmds.sr_flip_flop)
-	_g:setx(15)
-	_g:sety(16)
-	_g:run(_cmds.sr_flip_flop)
+	local debug=false
+	local cmds={}
+	if debug then
+		_g:setx(3)
+		_g:sety(6)
+		--[[
+		_g:setx(3)
+		_g:sety(6)
+		_g:run(_cmds.half_adder)
+		_g:setx(10)
+		_g:sety(1)
+		_g:run(_cmds.half_adder)
+		_g:setx(17)
+		_g:sety(7)
+		_g:run(_cmds.or_gate)
+		_g:setx(5)
+		_g:sety(16)
+		_g:run(_cmds.sr_flip_flop)
+		_g:setx(15)
+		_g:sety(16)
+		_g:run(_cmds.sr_flip_flop)
+		--]]
+	else
+		for i=1,256 do
+			local nib=0
+			if i<=#str then
+				nib=sub(str,i,i)
+			end
+			local num=tonum("0x"..nib)
+			_g.mem[i]=num
+		end
+		_g:run()
+	end
 	printh("-- interactive",_cart)
 	-- alter color palette
 	_pals={
@@ -910,9 +928,4 @@ function _draw()
 	end
 end
 __gfx__
-10320635466626666536662536636654664683665466468665466472154667115466368462536636866368462536668462546236662536666368665466436654
-664626654664626674372135466686868368466666847815466771546610a2013546662666653666253663665466468366546646866546647215466711546636
-84625366368663684625366684625462366625366663686654664366546646266546646266743721354666868683684666668478154667715466111207546636
-66253666253663665466436866546646266546646268711546666712546636653666846268711546666681052103526662536668666253666666665574162626
-45464646247225266687216253711526668666262666853666636666554686864646810f21035266625366686662536666666655741626264546464624722526
-66872162537115266686662626668536666366665546868646468000000000000000000000000000000000000000000000000000000000000000000000000000
+73152722527915376353763537225374353000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
