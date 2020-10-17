@@ -198,30 +198,33 @@ function grid:move(a,b)
 	self.x=self.lx
 	self.y=self.ly
 	add(self.hst,7)
-	add(self.hst,flr(a/0x10))
+	add(self.hst,a%0x10)
 	add(self.hst,b%0x10)
 end
 
 function grid:note(a)
+	a%=0x10
 	log("8"..hex(a,1))
-	self.lbl[1+a%0x10]=self.pc
+	self.lbl[1+a]=self.pc
 	add(self.hst,8)
-	add(self.hst,a%0x10)
+	add(self.hst,a)
 end
 
 function grid:jump(a)
+	a%=0x10
 	log("9"..hex(a,1))
-	self.pc=self.lbl[1+a%0x10]
+	self.pc=self.lbl[1+a]
 	add(self.hst,9)
-	add(self.hst,a%0x10)
+	add(self.hst,a)
 end
 
 function grid:proc(a)
+	a%=0x10
 	log("a"..hex(a,1))
-	add(self.stk,self.pc+2)
-	self.pc=self.lbl[1+a%0x10]
+	add(self.stk,self.pc)
+	self.pc=self.lbl[1+a]
 	add(self.hst,10)
-	add(self.hst,a%0x10)
+	add(self.hst,a)
 end
 
 function grid:done()
@@ -495,9 +498,9 @@ function _init()
 	_toolidx=5
 	_toolbox=true
 	_g=grid:new(32,32)
-	local demo=true
+	_demo=false
 	local str=""
-	if demo then
+	if _demo then
 		str="103206"..
 			"80".._cmds.hlf_add.."b"..
 			"111207"..
@@ -506,6 +509,7 @@ function _init()
 			"82".._cmds.sr_flip.."b"..
 			"10a201".."a0".. --hlf_add
 			"10f210".."a2".. --sr_flip
+			--"10f210".."a1".. --or_gate
 			"0000000000000000"
 	else
 		for y=0,127 do
@@ -739,7 +743,7 @@ function _update()
 		end
 	elseif btnp(⬅️,1) then
 		-- save history to spritesheet
-		for i=1,0x8000 do
+		for i=1,0x4000 do
 			local x=(i-1)%128
 			local y=flr((i-1)/128)
 			local c=0
@@ -964,3 +968,9 @@ function _draw()
 		drawdummy("lamp",lf+10,tp+10)
 	end
 end
+__gfx__
+10320680354666266665366625366366546646836654664686654664721546671154663684625366368663684625366684625462366625366663686654664366
+546646266546646266743721354666868683684666668478154667715466b1112078154663666253666253663665466436866546646266546646268711546666
+71254663665366684626871154666668b10521082352666253666866625366666666557416262645464646247225266687216253711526668666262666853666
+6366665546868646468b10a201a03546662666653666253663665466468366546646866546647215466711546636846253663686636846253666846254623666
+25366663686654664366546646266546646266743721354666868683684666668478154667715466b00000000000000000000000000000000000000000000000
