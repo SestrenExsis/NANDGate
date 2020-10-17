@@ -170,46 +170,6 @@ function grid:connect(
 	end
 end
 
-function grid:run()
-	while self.pc<=#self.mem do
-		local cmd=self.mem[self.pc]
-		if cmd==0 then
-			break
-		elseif cmd==1 then
-			local a=self.mem[self.pc+1]
-			local b=self.mem[self.pc+2]
-			self:setx(0x10*a+b)
-			self.pc+=3
-		elseif cmd==2 then
-			local a=self.mem[self.pc+1]
-			local b=self.mem[self.pc+2]
-			self:sety(0x10*a+b)
-			self.pc+=3
-		elseif cmd==3 then
-			self:push()
-			self.pc+=1
-		elseif cmd==4 then
-			self:pull()
-			self.pc+=1
-		elseif cmd==5 then
-			local a=self.mem[self.pc+1]
-			self:make(a)
-			self.pc+=2
-		elseif cmd==6 then
-			local a=self.mem[self.pc+1]
-			self:fuse(a)
-			self.pc+=2
-		elseif cmd==7 then
-			local a=self.mem[self.pc+1]
-			local b=self.mem[self.pc+2]
-			self:move(a,b)
-			self.pc+=3
-		else
-			self.pc+=1
-		end
-	end
-end
-
 function grid:go(a)
 	--local msg="grid:go("..a..")"
 	--printh(msg,_cart)
@@ -221,11 +181,12 @@ function grid:go(a)
 end
 
 function grid:move(a,b)
+	--todo: fix bug when replaying
 	--local msg="grid:move("
 	--msg=msg..a..","..b..")"
 	--printh(msg,_cart)
 	log("7"..hex(a,1)..hex(b,1))
-	local d=_dirs[a]
+	local d=_dirs[a%0x10]
 	local dx=b*d[1]
 	local dy=b*d[2]
 	self.lx=mid(
@@ -237,8 +198,39 @@ function grid:move(a,b)
 	self.x=self.lx
 	self.y=self.ly
 	add(self.hst,7)
-	add(self.hst,flr(a%0x10))
+	add(self.hst,flr(a/0x10))
 	add(self.hst,b%0x10)
+end
+
+function grid:note(a)
+	log("8"..hex(a,1))
+	self.lbl[1+a%0x10]=self.pc
+	add(self.hst,8)
+	add(self.hst,a%0x10)
+end
+
+function grid:jump(a)
+	log("9"..hex(a,1))
+	self.pc=self.lbl[1+a%0x10]
+	add(self.hst,9)
+	add(self.hst,a%0x10)
+end
+
+function grid:proc(a)
+	log("a"..hex(a,1))
+	add(self.stk,self.pc+2)
+	self.pc=self.lbl[1+a%0x10]
+	add(self.hst,10)
+	add(self.hst,a%0x10)
+end
+
+function grid:done()
+	log("b")
+	local idx=#self.stk
+	if idx>0 then
+		self.pc=deli(self.stk,idx)
+	end
+	add(self.hst,11)
 end
 
 function grid:update()
@@ -391,13 +383,68 @@ function grid:fuse(a)
 	add(self.hst,a%0x10)
 end
 
+function grid:run()
+	while self.pc<=#self.mem do
+		local cmd=self.mem[self.pc]
+		if cmd==0 then
+			break
+		elseif cmd==1 then
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
+			self:setx(0x10*a+b)
+			self.pc+=3
+		elseif cmd==2 then
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
+			self:sety(0x10*a+b)
+			self.pc+=3
+		elseif cmd==3 then
+			self:push()
+			self.pc+=1
+		elseif cmd==4 then
+			self:pull()
+			self.pc+=1
+		elseif cmd==5 then
+			local a=self.mem[self.pc+1]
+			self:make(a)
+			self.pc+=2
+		elseif cmd==6 then
+			local a=self.mem[self.pc+1]
+			self:fuse(a)
+			self.pc+=2
+		elseif cmd==7 then
+			local a=self.mem[self.pc+1]
+			local b=self.mem[self.pc+2]
+			self:move(a,b)
+			self.pc+=3
+		elseif cmd==8 then
+			local a=self.mem[self.pc+1]
+			self:note(a)
+			self.pc+=2
+		elseif cmd==9 then
+			local a=self.mem[self.pc+1]
+			self:jump(a)
+			self.pc+=2
+		elseif cmd==10 then
+			local a=self.mem[self.pc+1]
+			self:proc(a)
+			self.pc+=2
+		elseif cmd==11 then
+			self:done()
+			self.pc+=1
+		else
+			self.pc+=1
+		end
+	end
+end
+
 _cmds={
 	or_gate=
 		"546636662536662536636654"..
 		"664368665466462665466462"..
 		"687115466667125466366536"..
 		"6684626871154666668",
-	half_adder=
+	hlf_add=
 		"354666266665366625366366"..
 		"546646836654664686654664"..
 		"721546671154663684625366"..
@@ -406,7 +453,7 @@ _cmds={
 		"546646266546646266743721"..
 		"354666868683684666668478"..
 		"154667715466",
-	sr_flip_flop=
+	sr_flip=
 		"352666253666866625366666"..
 		"666557416262645464646247"..
 		"225266687216253711526668"..
@@ -446,48 +493,38 @@ function _init()
 		"-"
 		}
 	_toolidx=5
-	_toolbox=false
+	_toolbox=true
 	_g=grid:new(32,32)
+	local demo=true
 	local str=""
-	for y=0,127 do
-		for x=0,127 do
-			local c=sget(x,y)
-			str=str..hex(c,1)
-		end
-	end
-	local debug=false
-	local cmds={}
-	if debug then
-		_g:setx(3)
-		_g:sety(6)
-		--[[
-		_g:setx(3)
-		_g:sety(6)
-		_g:run(_cmds.half_adder)
-		_g:setx(10)
-		_g:sety(1)
-		_g:run(_cmds.half_adder)
-		_g:setx(17)
-		_g:sety(7)
-		_g:run(_cmds.or_gate)
-		_g:setx(5)
-		_g:sety(16)
-		_g:run(_cmds.sr_flip_flop)
-		_g:setx(15)
-		_g:sety(16)
-		_g:run(_cmds.sr_flip_flop)
-		--]]
+	if demo then
+		str="103206"..
+			"80".._cmds.hlf_add.."b"..
+			"111207"..
+			"81".._cmds.or_gate.."b"..
+			"105210"..
+			"82".._cmds.sr_flip.."b"..
+			"10a201".."a0".. --hlf_add
+			"10f210".."a2".. --sr_flip
+			"0000000000000000"
 	else
-		for i=1,256 do
-			local nib=0
-			if i<=#str then
-				nib=sub(str,i,i)
+		for y=0,127 do
+			for x=0,127 do
+				local c=sget(x,y)
+				str=str..hex(c,1)
 			end
-			local num=tonum("0x"..nib)
-			_g.mem[i]=num
 		end
-		_g:run()
 	end
+	local cmds={}
+	for i=1,max(#str,256) do
+		local nib=0
+		if i<=#str then
+			nib=sub(str,i,i)
+		end
+		local num=tonum("0x"..nib)
+		_g.mem[i]=num
+	end
+	_g:run()
 	printh("-- interactive",_cart)
 	-- alter color palette
 	_pals={
@@ -702,7 +739,7 @@ function _update()
 		end
 	elseif btnp(⬅️,1) then
 		-- save history to spritesheet
-		for i=1,#_g.hst+32 do
+		for i=1,0x8000 do
 			local x=(i-1)%128
 			local y=flr((i-1)/128)
 			local c=0
@@ -927,5 +964,3 @@ function _draw()
 		drawdummy("lamp",lf+10,tp+10)
 	end
 end
-__gfx__
-73152722527915376353763537225374353000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
