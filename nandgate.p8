@@ -497,7 +497,7 @@ function _init()
 		}
 	_toolidx=5
 	_toolbox=true
-	_g=grid:new(32,32)
+	_g=grid:new(128,128)
 	_demo=false
 	local str=""
 	if _demo then
